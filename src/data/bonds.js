@@ -1,0 +1,36 @@
+export const BONDS = [
+  // ── BTP a tasso fisso ────────────────────────────────────────────────────
+  { id: "BOT6M",     name: "BOT 6 Mesi",                price: 99.20,  coupon: 0.00,  maturity: "30/11/2025", rating: "BBB",  duration: 0.5 },
+  { id: "BOT12M",    name: "BOT 12 Mesi",               price: 98.30,  coupon: 0.00,  maturity: "30/06/2026", rating: "BBB",  duration: 1.0 },
+  { id: "BTPV27",    name: "BTP Valore 2027 3.25%",     price: 100.40, coupon: 3.25,  maturity: "02/12/2027", rating: "BBB",  duration: 2.8 },
+  { id: "BTP2026",   name: "BTP 01/06/2026 2.50%",      price: 98.40,  coupon: 2.50,  maturity: "01/06/2026", rating: "BBB",  duration: 1.2 },
+  { id: "BTP2027",   name: "BTP 15/11/2027 3.00%",      price: 98.10,  coupon: 3.00,  maturity: "15/11/2027", rating: "BBB",  duration: 2.5 },
+  { id: "BTP2028",   name: "BTP 01/08/2028 3.45%",      price: 99.20,  coupon: 3.45,  maturity: "01/08/2028", rating: "BBB",  duration: 3.3 },
+  { id: "BTP2029",   name: "BTP 15/04/2029 4.20%",      price: 102.80, coupon: 4.20,  maturity: "15/04/2029", rating: "BBB",  duration: 4.1 },
+  { id: "BTP2030",   name: "BTP 15/03/2030 3.00%",      price: 96.80,  coupon: 3.00,  maturity: "15/03/2030", rating: "BBB",  duration: 4.8 },
+  { id: "BTP2032",   name: "BTP 01/02/2032 1.65%",      price: 89.50,  coupon: 1.65,  maturity: "01/02/2032", rating: "BBB",  duration: 6.5 },
+  { id: "BTP2033",   name: "BTP 01/08/2033 4.35%",      price: 103.60, coupon: 4.35,  maturity: "01/08/2033", rating: "BBB",  duration: 7.1 },
+  { id: "BTP2035",   name: "BTP 01/03/2035 3.75%",      price: 98.40,  coupon: 3.75,  maturity: "01/03/2035", rating: "BBB",  duration: 8.5 },
+  { id: "BTP2037",   name: "BTP 01/11/2037 4.75%",      price: 106.20, coupon: 4.75,  maturity: "01/11/2037", rating: "BBB",  duration: 9.8 },
+  { id: "BTP2040",   name: "BTP 01/09/2040 5.00%",      price: 109.20, coupon: 5.00,  maturity: "01/09/2040", rating: "BBB",  duration: 11.2 },
+  { id: "BTP2044",   name: "BTP 01/09/2044 4.00%",      price: 96.10,  coupon: 4.00,  maturity: "01/09/2044", rating: "BBB",  duration: 14.3 },
+  { id: "BTP2050",   name: "BTP 01/03/2050 2.45%",      price: 74.20,  coupon: 2.45,  maturity: "01/03/2050", rating: "BBB",  duration: 18.4 },
+  { id: "BTP2072",   name: "BTP 01/03/2072 2.15%",      price: 57.80,  coupon: 2.15,  maturity: "01/03/2072", rating: "BBB",  duration: 28.6 },
+  // ── BTP indicizzati inflazione (BTPi) ─────────────────────────────────────
+  { id: "BTPI28",    name: "BTPi 15/05/2028 Linker",    price: 105.60, coupon: 0.40,  maturity: "15/05/2028", rating: "BBB",  duration: 3.2 },
+  { id: "BTPI30",    name: "BTPi 15/05/2030 Linker",    price: 103.20, coupon: 0.65,  maturity: "15/05/2030", rating: "BBB",  duration: 4.9 },
+  { id: "BTPI36",    name: "BTPi 15/09/2036 Linker",    price: 98.30,  coupon: 0.40,  maturity: "15/09/2036", rating: "BBB",  duration: 9.8 },
+  // ── CCT a tasso variabile ──────────────────────────────────────────────────
+  { id: "CCT27",     name: "CCT 15/10/2027 Float",      price: 99.10,  coupon: 3.80,  maturity: "15/10/2027", rating: "BBB",  duration: 2.3 },
+  { id: "CCT28",     name: "CCT 15/04/2028 Float",      price: 98.80,  coupon: 3.95,  maturity: "15/04/2028", rating: "BBB",  duration: 3.1 },
+  { id: "CCT29",     name: "CCT 15/10/2029 Float",      price: 97.60,  coupon: 4.05,  maturity: "15/10/2029", rating: "BBB",  duration: 4.3 },
+  // ── Corporate bond ────────────────────────────────────────────────────────
+  { id: "ENIBD",     name: "ENI Bond 2029 2.875%",      price: 96.40,  coupon: 2.875, maturity: "13/01/2029", rating: "BBB+", duration: 3.8 },
+  { id: "ENELBD",    name: "Enel Green Bond 2028 3.5%", price: 97.80,  coupon: 3.50,  maturity: "24/09/2028", rating: "BBB+", duration: 3.2 },
+  { id: "TITBD",     name: "TIM Bond 2027 3.625%",      price: 94.20,  coupon: 3.625, maturity: "25/05/2027", rating: "BB+",  duration: 2.1 },
+  { id: "ISPBD",     name: "Intesa SP Tier2 2030 4.75%",price: 102.10, coupon: 4.75,  maturity: "20/06/2030", rating: "BBB",  duration: 4.5 },
+  { id: "UCGBD",     name: "UniCredit Sub. 2031 4.875%",price: 99.30,  coupon: 4.875, maturity: "15/02/2031", rating: "BBB-", duration: 5.3 },
+  { id: "LDOBD",     name: "Leonardo Bond 2029 3.375%", price: 101.20, coupon: 3.375, maturity: "29/01/2029", rating: "BBB-", duration: 3.6 },
+  { id: "CPRGBD",    name: "Campari Bond 2026 2.00%",   price: 98.50,  coupon: 2.00,  maturity: "31/10/2026", rating: "BBB-", duration: 1.6 },
+  { id: "SRGBD",     name: "Snam Bond 2030 3.25%",      price: 99.10,  coupon: 3.25,  maturity: "15/07/2030", rating: "BBB+", duration: 4.9 },
+];

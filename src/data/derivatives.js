@@ -1,0 +1,41 @@
+export const DERIVATIVES = [
+  // ── Futures su indici (IDEM) ──────────────────────────────────────────────
+  { id: "FTSEMIBFUT", name: "FTSE MIB Future (FIB) Giu25",       price: 33850, multiplier: 5,   margin: 0.08, type: "Future",   underlying: "FTSE MIB", expiry: "20/06/2025" },
+  { id: "MINIFIB",    name: "MiniFIB Future Giu25",               price: 33850, multiplier: 1,   margin: 0.08, type: "Future",   underlying: "FTSE MIB", expiry: "20/06/2025" },
+  { id: "MICROFIB",   name: "MicroFIB Future Giu25",              price: 33850, multiplier: 0.1, margin: 0.08, type: "Future",   underlying: "FTSE MIB", expiry: "20/06/2025" },
+  { id: "FIBSET25",   name: "FTSE MIB Future (FIB) Set25",        price: 33720, multiplier: 5,   margin: 0.08, type: "Future",   underlying: "FTSE MIB", expiry: "19/09/2025" },
+  { id: "FIBDIC25",   name: "FTSE MIB Future (FIB) Dic25",        price: 33590, multiplier: 5,   margin: 0.08, type: "Future",   underlying: "FTSE MIB", expiry: "19/12/2025" },
+  // ── Opzioni su indice (IDEM) ──────────────────────────────────────────────
+  { id: "CALLFIB34K", name: "CALL FIB Strike 34000 Giu25",        price: 680,   strike: 34000, underlying: "FTSE MIB", type: "Option", optType: "call", delta: 0.55, expiry: "20/06/2025" },
+  { id: "PUTFIB33K",  name: "PUT FIB Strike 33000 Giu25",         price: 540,   strike: 33000, underlying: "FTSE MIB", type: "Option", optType: "put",  delta: -0.48, expiry: "20/06/2025" },
+  { id: "CALLFIB35K", name: "CALL FIB Strike 35000 Giu25",        price: 290,   strike: 35000, underlying: "FTSE MIB", type: "Option", optType: "call", delta: 0.30, expiry: "20/06/2025" },
+  { id: "PUTFIB32K",  name: "PUT FIB Strike 32000 Giu25",         price: 310,   strike: 32000, underlying: "FTSE MIB", type: "Option", optType: "put",  delta: -0.29, expiry: "20/06/2025" },
+  // ── Opzioni su azioni single stock (IDEM) ────────────────────────────────
+  { id: "CALLENI15",  name: "CALL ENI Strike 15 Giu25",           price: 0.42,  strike: 15,  underlying: "ENI",  type: "Option", optType: "call", delta: 0.48, expiry: "20/06/2025" },
+  { id: "PUTENI14",   name: "PUT ENI Strike 14 Giu25",            price: 0.38,  strike: 14,  underlying: "ENI",  type: "Option", optType: "put",  delta: -0.42, expiry: "20/06/2025" },
+  { id: "CALLENI16",  name: "CALL ENI Strike 16 Set25",           price: 0.26,  strike: 16,  underlying: "ENI",  type: "Option", optType: "call", delta: 0.30, expiry: "19/09/2025" },
+  { id: "PUTENI13",   name: "PUT ENI Strike 13 Set25",            price: 0.21,  strike: 13,  underlying: "ENI",  type: "Option", optType: "put",  delta: -0.28, expiry: "19/09/2025" },
+  { id: "CALLENEL7",  name: "CALL ENEL Strike 7 Giu25",           price: 0.21,  strike: 7,   underlying: "ENEL", type: "Option", optType: "call", delta: 0.45, expiry: "20/06/2025" },
+  { id: "PUTENEL6",   name: "PUT ENEL Strike 6 Giu25",            price: 0.19,  strike: 6,   underlying: "ENEL", type: "Option", optType: "put",  delta: -0.38, expiry: "20/06/2025" },
+  { id: "CALLISP4",   name: "CALL ISP Strike 4.0 Giu25",          price: 0.09,  strike: 4.0, underlying: "ISP",  type: "Option", optType: "call", delta: 0.32, expiry: "20/06/2025" },
+  { id: "PUTISP35",   name: "PUT ISP Strike 3.5 Giu25",           price: 0.11,  strike: 3.5, underlying: "ISP",  type: "Option", optType: "put",  delta: -0.35, expiry: "20/06/2025" },
+  { id: "CALLUCG38",  name: "CALL UCG Strike 38 Giu25",           price: 1.85,  strike: 38,  underlying: "UCG",  type: "Option", optType: "call", delta: 0.52, expiry: "20/06/2025" },
+  { id: "PUTUCG35",   name: "PUT UCG Strike 35 Giu25",            price: 1.42,  strike: 35,  underlying: "UCG",  type: "Option", optType: "put",  delta: -0.44, expiry: "20/06/2025" },
+  { id: "CALLLDO30",  name: "CALL LDO Strike 30 Giu25",           price: 1.10,  strike: 30,  underlying: "LDO",  type: "Option", optType: "call", delta: 0.41, expiry: "20/06/2025" },
+  { id: "PUTLDO27",   name: "PUT LDO Strike 27 Giu25",            price: 0.95,  strike: 27,  underlying: "LDO",  type: "Option", optType: "put",  delta: -0.39, expiry: "20/06/2025" },
+  { id: "CALLRACE400",name: "CALL RACE Strike 400 Giu25",         price: 8.40,  strike: 400, underlying: "RACE", type: "Option", optType: "call", delta: 0.49, expiry: "20/06/2025" },
+  { id: "PUTRACE380", name: "PUT RACE Strike 380 Giu25",          price: 7.20,  strike: 380, underlying: "RACE", type: "Option", optType: "put",  delta: -0.44, expiry: "20/06/2025" },
+  // ── Covered Warrant (SeDeX) ───────────────────────────────────────────────
+  { id: "CWCALLENI",  name: "CW CALL ENI Strike 15 Dic25",        price: 0.185, strike: 15,  underlying: "ENI",  type: "Warrant", optType: "call", delta: 0.42, expiry: "20/12/2025" },
+  { id: "CWPUTENI",   name: "CW PUT ENI Strike 13 Dic25",         price: 0.140, strike: 13,  underlying: "ENI",  type: "Warrant", optType: "put",  delta: -0.36, expiry: "20/12/2025" },
+  { id: "CWCALLENEL", name: "CW CALL ENEL Strike 7 Dic25",        price: 0.098, strike: 7,   underlying: "ENEL", type: "Warrant", optType: "call", delta: 0.38, expiry: "20/12/2025" },
+  { id: "CWPUTUCG",   name: "CW PUT UCG Strike 34 Dic25",         price: 0.890, strike: 34,  underlying: "UCG",  type: "Warrant", optType: "put",  delta: -0.40, expiry: "20/12/2025" },
+  { id: "CWCALLSTM",  name: "CW CALL STM Strike 26 Dic25",        price: 0.620, strike: 26,  underlying: "STM",  type: "Warrant", optType: "call", delta: 0.44, expiry: "20/12/2025" },
+  // ── Certificati di investimento ───────────────────────────────────────────
+  { id: "CERTBULLRACE", name: "Cert. Turbo BULL Ferrari ×5",      price: 8.25,  underlying: "RACE", leverage: 5,   barrier: 310.0, type: "Certificato", optType: "bull" },
+  { id: "CERTBEARSTM",  name: "Cert. Turbo BEAR STM ×3",          price: 3.40,  underlying: "STM",  leverage: 3,   barrier: 28.0,  type: "Certificato", optType: "bear" },
+  { id: "CERTBONUSENI", name: "Cert. Bonus Cap ENI – bar.12",     price: 13.80, underlying: "ENI",  bonus: 15.0,   barrier: 12.0,  type: "Certificato", optType: "bonus" },
+  { id: "CERTEXPRESSISP",name: "Cert. Express ISP – bar.3.0",     price: 100.40,underlying: "ISP",  barrier: 3.0,  coupon: 6.5,    type: "Certificato", optType: "express" },
+  { id: "CERTPHOENIXUCG",name: "Cert. Phoenix Memory UCG",        price: 98.20, underlying: "UCG",  barrier: 28.0, coupon: 8.0,    type: "Certificato", optType: "phoenix" },
+  { id: "CERTBULLENI",   name: "Cert. Turbo BULL ENI ×4",         price: 3.12,  underlying: "ENI",  leverage: 4,   barrier: 12.0,  type: "Certificato", optType: "bull" },
+];

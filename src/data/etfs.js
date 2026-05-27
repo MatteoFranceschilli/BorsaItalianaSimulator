@@ -1,0 +1,42 @@
+export const ETFS = [
+  // ── Azionari Italia / Europa ──────────────────────────────────────────────
+  { id: "XMIB",    name: "Xtrackers FTSE MIB UCITS ETF",         price: 29.45,  beta: 1.00,  type: "Az. Italia",    ter: 0.30 },
+  { id: "IMIB",    name: "iShares FTSE MIB UCITS ETF",           price: 31.10,  beta: 1.00,  type: "Az. Italia",    ter: 0.35 },
+  { id: "EXW1",    name: "iShares Core Euro Stoxx 50 ETF",       price: 51.20,  beta: 0.95,  type: "Az. Europa",    ter: 0.10 },
+  { id: "EXSA",    name: "Xtrackers Euro Stoxx 50 EUR Hdg",      price: 48.90,  beta: 0.93,  type: "Az. Europa",    ter: 0.09 },
+  { id: "IESE",    name: "iShares MSCI Europe UCITS ETF",        price: 22.60,  beta: 0.90,  type: "Az. Europa",    ter: 0.12 },
+  { id: "SMEA",    name: "iShares MSCI Europe Small Cap",        price: 38.40,  beta: 1.05,  type: "Az. Eur. Small", ter: 0.58 },
+  // ── Azionari USA / Globale ────────────────────────────────────────────────
+  { id: "CSSPX",   name: "iShares Core S&P 500 UCITS ETF",       price: 558.30, beta: 0.85,  type: "Az. USA",       ter: 0.07 },
+  { id: "SP500H",  name: "Xtrackers S&P 500 EUR Hdg",            price: 72.80,  beta: 0.85,  type: "Az. USA Hdg",   ter: 0.09 },
+  { id: "CNDX",    name: "iShares Nasdaq 100 UCITS ETF",         price: 91.30,  beta: 1.15,  type: "Az. USA Tech",  ter: 0.33 },
+  { id: "VWRL",    name: "Vanguard FTSE All-World UCITS ETF",    price: 108.70, beta: 0.90,  type: "Az. Globale",   ter: 0.22 },
+  { id: "SWDA",    name: "iShares Core MSCI World UCITS ETF",    price: 97.50,  beta: 0.88,  type: "Az. Globale",   ter: 0.20 },
+  { id: "EM",      name: "iShares MSCI Emerging Markets",        price: 33.40,  beta: 1.10,  type: "Az. Emergenti", ter: 0.18 },
+  { id: "IIND",    name: "iShares MSCI India UCITS ETF",         price: 43.70,  beta: 1.20,  type: "Az. India",     ter: 0.65 },
+  { id: "TOPIX",   name: "iShares Core MSCI Japan IMI",          price: 7.20,   beta: 0.75,  type: "Az. Giappone",  ter: 0.15 },
+  { id: "KCHINA",  name: "KraneShares CSI China Internet",       price: 24.80,  beta: 1.30,  type: "Az. Cina",      ter: 0.70 },
+  // ── Obbligazionari ───────────────────────────────────────────────────────
+  { id: "XBTP",    name: "iShares Euro Govt Bond 7-10yr",        price: 112.30, beta: 0.20,  type: "Obblig. Gov.",  ter: 0.09 },
+  { id: "IBTS",    name: "iShares USD Treasury Bond 7-10yr Hdg", price: 97.80,  beta: 0.15,  type: "Obblig. USA",   ter: 0.10 },
+  { id: "VGOV",    name: "Vanguard EUR Govt Bond UCITS ETF",     price: 24.60,  beta: 0.18,  type: "Obblig. Gov.",  ter: 0.07 },
+  { id: "HYG",     name: "iShares EUR High Yield Corp Bond",     price: 86.40,  beta: 0.45,  type: "Obblig. HY",    ter: 0.50 },
+  { id: "IEAC",    name: "iShares Core EUR Corp Bond",           price: 114.20, beta: 0.30,  type: "Obblig. Corp.",  ter: 0.20 },
+  { id: "SEMB",    name: "iShares J.P. Morgan EM Bond EUR Hdg",  price: 82.60,  beta: 0.55,  type: "Obblig. EM",    ter: 0.50 },
+  // ── Materie Prime (ETC) ───────────────────────────────────────────────────
+  { id: "GOLD",    name: "Invesco Physical Gold ETC",            price: 185.60, beta: -0.10, type: "Oro",           ter: 0.12 },
+  { id: "IGLN",    name: "iShares Physical Gold ETC",            price: 41.80,  beta: -0.08, type: "Oro",           ter: 0.15 },
+  { id: "SILVER",  name: "WisdomTree Physical Silver",           price: 22.30,  beta: 0.20,  type: "Argento",       ter: 0.19 },
+  { id: "OIL",     name: "WisdomTree WTI Crude Oil ETC",         price: 5.78,   beta: 0.60,  type: "Petrolio",      ter: 0.49 },
+  { id: "AIGA",    name: "WisdomTree Agriculture ETC",           price: 8.90,   beta: 0.30,  type: "Agricoltura",   ter: 0.49 },
+  { id: "COPPER",  name: "WisdomTree Copper ETC",                price: 31.40,  beta: 0.70,  type: "Metalli Ind.",  ter: 0.39 },
+  // ── Tematici / Settoriali ─────────────────────────────────────────────────
+  { id: "RENEW",   name: "iShares Global Clean Energy UCITS",    price: 18.40,  beta: 1.20,  type: "Clean Energy",  ter: 0.65 },
+  { id: "ROBO",    name: "ROBO Global Robotics & Automation",    price: 52.70,  beta: 1.35,  type: "Robotica",      ter: 0.80 },
+  { id: "CYBE",    name: "L&G Cybersecurity UCITS ETF",          price: 29.10,  beta: 1.25,  type: "Cybersecurity", ter: 0.75 },
+  { id: "HEAL",    name: "iShares Healthcare Innovation UCITS",  price: 12.80,  beta: 0.85,  type: "Healthcare",    ter: 0.40 },
+  { id: "IFSB",    name: "iShares Global Financials UCITS ETF",  price: 32.50,  beta: 1.15,  type: "Finanziari",    ter: 0.51 },
+  { id: "IDVY",    name: "iShares Euro Dividend UCITS ETF",      price: 22.80,  beta: 0.70,  type: "Dividendo",     ter: 0.40 },
+  { id: "WATERLX", name: "Lyxor MSCI Water ESG Filtered ETF",    price: 38.40,  beta: 0.85,  type: "Water/ESG",     ter: 0.60 },
+  { id: "HSML",    name: "HSBC MSCI World Small Cap ETF",        price: 19.60,  beta: 1.10,  type: "Az. Small Cap", ter: 0.35 },
+];

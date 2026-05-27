@@ -1,0 +1,5 @@
+node_modules/
+dist/
+mytemp/
+.DS_Store
+*.local
