@@ -149,30 +149,32 @@ input.s-input:focus { border-color: #e8c96c; }
 .pf-value.neg { color: var(--red); }
 .pf-value.gold { color: var(--gold); }
 
-/* ── SIDEBAR + BODY LAYOUT ── */
-.app-body {
-  display: flex;
-  align-items: flex-start;
-  min-height: calc(100vh - 58px);
-}
-
+/* ── SIDEBAR (fixed) + CONTENT AREA ── */
 .sidebar {
+  position: fixed;
+  top: 58px;
+  left: 0;
+  bottom: 0;
   width: 190px;
-  flex-shrink: 0;
+  z-index: 50;
   background: var(--bg2);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 58px;
-  height: calc(100vh - 58px);
   overflow-y: auto;
   scrollbar-width: none;
   transition: width 0.22s ease;
-  z-index: 50;
 }
 .sidebar.collapsed { width: 52px; }
 .sidebar::-webkit-scrollbar { display: none; }
+
+.content-area {
+  margin-left: 190px;
+  transition: margin-left 0.22s ease;
+}
+.content-area.sidebar-collapsed {
+  margin-left: 52px;
+}
 
 .sidebar-tabs { display: flex; flex-direction: column; flex: 1; padding: 6px 0; }
 
@@ -231,7 +233,7 @@ input.s-input:focus { border-color: #e8c96c; }
 .sidebar.collapsed .sidebar-toggle { justify-content: center; padding: 10px 0; }
 
 /* ── MAIN ── */
-.main { flex: 1; min-width: 0; padding: 20px; overflow-x: hidden; }
+.main { padding: 20px; }
 
 /* ── CARDS ── */
 .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
@@ -352,6 +354,8 @@ select option { background: var(--bg2); }
   .pf-label { font-size: 9px; }
   .sidebar { width: 160px; }
   .sidebar.collapsed { width: 46px; }
+  .content-area { margin-left: 160px; }
+  .content-area.sidebar-collapsed { margin-left: 46px; }
   .main { padding: 10px; }
   .table-scroll { overflow-x: auto; max-height: 380px; }
   .table-scroll table { min-width: 500px; }
@@ -366,6 +370,8 @@ select option { background: var(--bg2); }
   .sidebar { width: 46px; }
   .sidebar-label { display: none; }
   .sidebar-tab, .sidebar-toggle { justify-content: center; padding: 10px 0; }
+  .content-area { margin-left: 46px; }
+  .content-area.sidebar-collapsed { margin-left: 46px; }
   .ticker-tape { display: none; }
 }
 

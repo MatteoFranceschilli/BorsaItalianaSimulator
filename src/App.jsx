@@ -386,6 +386,41 @@ export default function App() {
         </div>
       </div>
 
+      {/* SIDEBAR - fixed, independent of page scroll */}
+      <nav className={`sidebar${sidebarCollapsed ? " collapsed" : ""}`}>
+        <div className="sidebar-tabs">
+          {TABS.map(t => {
+            const label = t === "ordini"
+              ? `Ordini${orders.length ? ` (${orders.length})` : ""}`
+              : t === "notizie" && activeEvents.length > 0
+                ? `Notizie (${activeEvents.length})`
+                : TAB_NAMES[t];
+            return (
+              <button
+                key={t}
+                className={`sidebar-tab${tab === t ? " active" : ""}`}
+                onClick={() => setTab(t)}
+                title={sidebarCollapsed ? label : undefined}
+              >
+                <span className="sidebar-icon">{TAB_ICONS[t]}</span>
+                {!sidebarCollapsed && <span className="sidebar-label">{label}</span>}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          className="sidebar-toggle"
+          onClick={() => setSidebarCollapsed(s => !s)}
+          title={sidebarCollapsed ? "Espandi menu" : "Comprimi menu"}
+        >
+          <span className="sidebar-icon">{sidebarCollapsed ? "›" : "‹"}</span>
+          {!sidebarCollapsed && <span className="sidebar-label">Comprimi</span>}
+        </button>
+      </nav>
+
+      {/* CONTENT AREA - shifted right by sidebar */}
+      <div className={`content-area${sidebarCollapsed ? " sidebar-collapsed" : ""}`}>
+
       {/* PORTFOLIO STRIP */}
       <div className="portfolio-strip">
         <div className="pf-metric">
@@ -424,41 +459,6 @@ export default function App() {
           </div>
         </div>
       </div>
-
-      {/* BODY: sidebar + content */}
-      <div className="app-body">
-
-        {/* SIDEBAR */}
-        <nav className={`sidebar${sidebarCollapsed ? " collapsed" : ""}`}>
-          <div className="sidebar-tabs">
-            {TABS.map(t => {
-              const label = t === "ordini"
-                ? `Ordini${orders.length ? ` (${orders.length})` : ""}`
-                : t === "notizie" && activeEvents.length > 0
-                  ? `Notizie (${activeEvents.length})`
-                  : TAB_NAMES[t];
-              return (
-                <button
-                  key={t}
-                  className={`sidebar-tab${tab === t ? " active" : ""}`}
-                  onClick={() => setTab(t)}
-                  title={sidebarCollapsed ? label : undefined}
-                >
-                  <span className="sidebar-icon">{TAB_ICONS[t]}</span>
-                  {!sidebarCollapsed && <span className="sidebar-label">{label}</span>}
-                </button>
-              );
-            })}
-          </div>
-          <button
-            className="sidebar-toggle"
-            onClick={() => setSidebarCollapsed(s => !s)}
-            title={sidebarCollapsed ? "Espandi menu" : "Comprimi menu"}
-          >
-            <span className="sidebar-icon">{sidebarCollapsed ? "›" : "‹"}</span>
-            {!sidebarCollapsed && <span className="sidebar-label">Comprimi</span>}
-          </button>
-        </nav>
 
         {/* MAIN CONTENT */}
         <div className="main">
@@ -587,7 +587,7 @@ export default function App() {
 
         {tab === "wiki" && <WikiTab />}
         </div>{/* end .main */}
-      </div>{/* end .app-body */}
+      </div>{/* end .content-area */}
 
       {/* FLOATING ALERTS */}
       <div className="alerts-container">
