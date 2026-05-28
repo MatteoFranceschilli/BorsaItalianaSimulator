@@ -278,53 +278,6 @@ export default function App() {
   // ── Main game layout ───────────────────────────────────────────────────────
   return (
     <div className={`app theme-${theme}`}>
-      {/* TICKER TAPE */}
-      <div className="ticker-tape">
-        <div className="ticker-inner">
-          {[...STOCKS, ...ETFS].map(i => {
-            const p = prices[i.id];
-            if (!p) return null;
-            return (
-              <span key={i.id} className="ticker-item">
-                <span style={{ color: "#e8c96c" }}>{i.id}</span>
-                <span style={{ color: "var(--gc)" }}>€{fmt(p.current)}</span>
-                <span style={{ color: clr(p.pctChange) }}>{fmtPct(p.pctChange)}</span>
-              </span>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* BREAKING NEWS BANNER (visible when events are active) */}
-      {activeEvents.length > 0 && (
-        <div
-          style={{
-            background: "rgba(255,109,0,0.15)",
-            borderBottom: "1px solid #ff6d00",
-            padding: "5px 16px",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            overflow: "hidden",
-            cursor: "pointer",
-          }}
-          onClick={() => setTab("notizie")}
-          title="Vai alla scheda Notizie"
-        >
-          <span style={{ fontFamily: "Space Mono", fontSize: 10, color: "#ff6d00", fontWeight: 700, flexShrink: 0, letterSpacing: 1 }}>
-            📡 BREAKING
-          </span>
-          <div style={{ overflow: "hidden", whiteSpace: "nowrap", flex: 1 }}>
-            <span style={{ fontSize: 11, color: "var(--gc)" }}>
-              {activeEvents.map(e => `${e.icon} ${e.title}`).join("  ·  ")}
-            </span>
-          </div>
-          <span style={{ fontFamily: "Space Mono", fontSize: 10, color: "#ff6d00", flexShrink: 0 }}>
-            {activeEvents.length} evento{activeEvents.length > 1 ? "i" : ""} attiv{activeEvents.length > 1 ? "i" : "o"} →
-          </span>
-        </div>
-      )}
-
       {/* HEADER */}
       <div className="header">
         <div className="logo">
@@ -420,6 +373,53 @@ export default function App() {
 
       {/* CONTENT AREA - shifted right by sidebar */}
       <div className={`content-area${sidebarCollapsed ? " sidebar-collapsed" : ""}`}>
+
+      {/* TICKER TAPE */}
+      <div className="ticker-tape">
+        <div className="ticker-inner">
+          {[...STOCKS, ...ETFS].map(i => {
+            const p = prices[i.id];
+            if (!p) return null;
+            return (
+              <span key={i.id} className="ticker-item">
+                <span style={{ color: "#e8c96c" }}>{i.id}</span>
+                <span style={{ color: "var(--gc)" }}>€{fmt(p.current)}</span>
+                <span style={{ color: clr(p.pctChange) }}>{fmtPct(p.pctChange)}</span>
+              </span>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* BREAKING NEWS BANNER */}
+      {activeEvents.length > 0 && (
+        <div
+          style={{
+            background: "rgba(255,109,0,0.15)",
+            borderBottom: "1px solid #ff6d00",
+            padding: "5px 16px",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            overflow: "hidden",
+            cursor: "pointer",
+          }}
+          onClick={() => setTab("notizie")}
+          title="Vai alla scheda Notizie"
+        >
+          <span style={{ fontFamily: "Space Mono", fontSize: 10, color: "#ff6d00", fontWeight: 700, flexShrink: 0, letterSpacing: 1 }}>
+            📡 BREAKING
+          </span>
+          <div style={{ overflow: "hidden", whiteSpace: "nowrap", flex: 1 }}>
+            <span style={{ fontSize: 11, color: "var(--gc)" }}>
+              {activeEvents.map(e => `${e.icon} ${e.title}`).join("  ·  ")}
+            </span>
+          </div>
+          <span style={{ fontFamily: "Space Mono", fontSize: 10, color: "#ff6d00", flexShrink: 0 }}>
+            {activeEvents.length} evento{activeEvents.length > 1 ? "i" : ""} attiv{activeEvents.length > 1 ? "i" : "o"} →
+          </span>
+        </div>
+      )}
 
       {/* PORTFOLIO STRIP */}
       <div className="portfolio-strip">
