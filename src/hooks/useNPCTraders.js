@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { NPCS } from "../data/npcs.js";
 import { STOCKS } from "../data/stocks.js";
+import { calcCommission, calcTax } from "../utils/tax.js";
 
 function calcPortfolioValue(state, prices) {
   return Object.entries(state.portfolio).reduce((sum, [id, pos]) => {
@@ -290,7 +291,8 @@ export function useNPCTraders() {
       const s = { ...state, portfolio: { ...state.portfolio } };
 
       if (action === "buy") {
-        const cost = qty * price;
+        const commission = calcCommission(qty * price);
+        const cost = qty * price + commission;
         if (cost > s.cash) return;
         s.cash -= cost;
         if (s.portfolio[instrId]) {
@@ -304,7 +306,10 @@ export function useNPCTraders() {
       } else {
         const pos = s.portfolio[instrId];
         if (!pos || pos.qty < qty) return;
-        s.cash += qty * price;
+        const commission = calcCommission(qty * price);
+        const gain = Math.max(0, (price - pos.avgPrice) * qty);
+        const tax = calcTax(gain, instrId);
+        s.cash += qty * price - commission - tax;
         const rem = pos.qty - qty;
         if (rem <= 0) {
           const { [instrId]: _, ...rest } = s.portfolio;

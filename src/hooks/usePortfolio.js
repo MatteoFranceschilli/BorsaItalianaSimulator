@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { fmt } from "../utils/formatters.js";
+import { calcCommission, calcTax } from "../utils/tax.js";
 
 export function usePortfolio(addAlert) {
   const [cash, setCash] = useState(1000);
@@ -7,7 +8,7 @@ export function usePortfolio(addAlert) {
   const [trades, setTrades] = useState([]);
 
   const executeTrade = useCallback((instrId, side, qty, price, type) => {
-    const commission = Math.max(1.5, price * qty * 0.001);
+    const commission = calcCommission(price * qty);
     if (side === "buy") {
       const total = price * qty + commission;
       setCash(c => {
@@ -22,7 +23,7 @@ export function usePortfolio(addAlert) {
           return { ...p, [instrId]: { qty: newQty, avgPrice: newCost / newQty, totalCost: newCost } };
         });
         setTrades(t => [{
-          id: Date.now(), instrId, side, qty, price, commission, total,
+          id: Date.now(), instrId, side, qty, price, commission, tax: 0, total,
           time: new Date().toLocaleString("it-IT"), type
         }, ...t]);
         return c - total;
@@ -34,10 +35,12 @@ export function usePortfolio(addAlert) {
           addAlert?.("Quantità insufficiente in portafoglio", "error");
           return p;
         }
-        const revenue = price * qty - commission;
+        const gain = Math.max(0, (price - existing.avgPrice) * qty);
+        const tax = calcTax(gain, instrId);
+        const revenue = price * qty - commission - tax;
         setCash(c => c + revenue);
         setTrades(t => [{
-          id: Date.now(), instrId, side, qty, price, commission, total: revenue,
+          id: Date.now(), instrId, side, qty, price, commission, tax, total: revenue,
           time: new Date().toLocaleString("it-IT"), type
         }, ...t]);
         const newQty = existing.qty - qty;

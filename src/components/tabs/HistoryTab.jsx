@@ -22,6 +22,7 @@ export default function HistoryTab({ trades }) {
                 <th style={{ textAlign: "right" }}>Qtà</th>
                 <th style={{ textAlign: "right" }}>Prezzo</th>
                 <th style={{ textAlign: "right" }}>Commissione</th>
+                <th style={{ textAlign: "right" }}>Imposta</th>
                 <th style={{ textAlign: "right" }}>Totale</th>
               </tr>
             </thead>
@@ -36,6 +37,9 @@ export default function HistoryTab({ trades }) {
                   <td style={{ textAlign: "right", fontFamily: "monospace" }}>{t.qty}</td>
                   <td style={{ textAlign: "right", fontFamily: "monospace" }}>€{fmt(t.price)}</td>
                   <td style={{ textAlign: "right", fontFamily: "monospace", color: "#ffc107" }}>€{fmt(t.commission)}</td>
+                  <td style={{ textAlign: "right", fontFamily: "monospace", color: (t.tax || 0) > 0 ? "#ff9800" : "var(--text3)" }}>
+                    {(t.tax || 0) > 0 ? `€${fmt(t.tax)}` : "—"}
+                  </td>
                   <td style={{ textAlign: "right", fontFamily: "monospace", color: t.side === "buy" ? "#ff1744" : "#00e676", fontWeight: 700 }}>
                     {t.side === "buy" ? "-" : "+"}€{fmt(t.total)}
                   </td>

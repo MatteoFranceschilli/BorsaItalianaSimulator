@@ -1,6 +1,7 @@
 import { ALL_INSTRUMENTS } from "../../data/instruments.js";
 import { OP_DESCRIPTIONS } from "../../data/operations.js";
 import { fmt, fmtPct, clr } from "../../utils/formatters.js";
+import { calcCommission, calcTax, getTaxRate } from "../../utils/tax.js";
 import PriceChart from "../charts/PriceChart.jsx";
 import OpDescModal from "../modals/OpDescModal.jsx";
 
@@ -20,7 +21,12 @@ export default function TradingTab({
   const currentOpDesc = OP_DESCRIPTIONS[opKey];
   const cp = selectedInstr ? prices[selectedInstr.id]?.current : null;
   const qty = parseInt(orderQty || 0);
-  const commission = cp && qty ? Math.max(1.5, cp * qty * 0.001) : 0;
+  const commission = cp && qty ? calcCommission(cp * qty) : 0;
+  const pos = selectedInstr ? portfolio[selectedInstr.id] : null;
+  const sellGain = (orderSide === "sell" && pos && cp && qty)
+    ? Math.max(0, (cp - pos.avgPrice) * qty) : 0;
+  const tax = calcTax(sellGain, selectedInstr?.id);
+  const taxRatePct = selectedInstr ? Math.round(getTaxRate(selectedInstr.id) * 100) : 26;
 
   return (
     <div className="grid-main">
@@ -202,10 +208,20 @@ export default function TradingTab({
                   <span style={{ fontSize: 11, color: "var(--text3)", fontFamily: "Space Mono" }}>Commissione est.:</span>
                   <span style={{ fontSize: 11, fontFamily: "Space Mono", color: "#ffc107" }}>€{fmt(commission)}</span>
                 </div>
+                {orderSide === "sell" && tax > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, color: "var(--text3)", fontFamily: "Space Mono" }}>
+                      Imposta ({taxRatePct}% plusv.):
+                    </span>
+                    <span style={{ fontSize: 11, fontFamily: "Space Mono", color: "#ff9800" }}>€{fmt(tax)}</span>
+                  </div>
+                )}
                 <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--border)", paddingTop: 4 }}>
                   <span style={{ fontSize: 11, color: "var(--gc)", fontFamily: "Space Mono", fontWeight: 700 }}>Totale:</span>
                   <span style={{ fontSize: 12, fontFamily: "Space Mono", fontWeight: 700, color: orderSide === "buy" ? "#ff1744" : "#00e676" }}>
-                    {orderSide === "buy" ? "-" : "+"}€{fmt(cp * qty + (orderSide === "buy" ? commission : -commission))}
+                    {orderSide === "buy"
+                      ? `-€${fmt(cp * qty + commission)}`
+                      : `+€${fmt(cp * qty - commission - tax)}`}
                   </span>
                 </div>
               </div>

@@ -7,6 +7,7 @@ export default function AnalyticsTab({ positions, trades, prices, portfolioValue
   const negCount = returns.filter(r => r < 0).length;
   const avgReturn = returns.length ? returns.reduce((a, b) => a + b, 0) / returns.length : 0;
   const totalCommissions = trades.reduce((sum, t) => sum + t.commission, 0);
+  const totalTaxes = trades.reduce((sum, t) => sum + (t.tax || 0), 0);
   const winRate = returns.length ? (posCount / returns.length) * 100 : 0;
   const bestPos = positions.reduce((best, p) => (!best || p.pnlPct > best.pnlPct) ? p : best, null);
   const worstPos = positions.reduce((worst, p) => (!worst || p.pnlPct < worst.pnlPct) ? p : worst, null);
@@ -15,6 +16,7 @@ export default function AnalyticsTab({ positions, trades, prices, portfolioValue
     ["Ritorno Medio Posizioni", fmtPct(avgReturn), clr(avgReturn)],
     ["Win Rate", fmt(winRate) + "%", winRate >= 50 ? "#00e676" : "#ff1744"],
     ["Commissioni Totali", fmtEur(totalCommissions), "#ffc107"],
+    ["Imposte Versate", fmtEur(totalTaxes), "#ff9800"],
     ["Posizioni Positive", posCount, "#00e676"],
     ["Posizioni Negative", negCount, "#ff1744"],
     ["Miglior Titolo", bestPos ? `${bestPos.id} (${fmtPct(bestPos.pnlPct)})` : "—", "#00e676"],
