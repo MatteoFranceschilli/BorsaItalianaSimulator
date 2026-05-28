@@ -56,6 +56,12 @@
 
 body { background: var(--bg); }
 
+:root {
+  --hdr-h:    58px;
+  --ticker-h: 32px;
+  --strip-h:  50px;
+}
+
 .app {
   font-family: 'Barlow', sans-serif;
   background: var(--bg);
@@ -134,13 +140,17 @@ input.s-input:focus { border-color: #e8c96c; }
 
 /* ── PORTFOLIO STRIP ── */
 .portfolio-strip {
+  position: sticky;
+  top: calc(var(--hdr-h) + var(--ticker-h)); /* below header + ticker */
+  z-index: 89;
+  height: var(--strip-h);
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
-  padding: 8px 16px;
+  padding: 0 16px;
   display: flex;
   gap: 24px;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -331,7 +341,7 @@ select option { background: var(--bg2); }
 .sector-card { background: var(--bg); border: 1px solid var(--border); border-radius: 3px; padding: 8px 10px; }
 
 /* ── TICKER TAPE ── */
-.ticker-tape { background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 4px 0; overflow: hidden; white-space: nowrap; }
+.ticker-tape { position: sticky; top: var(--hdr-h); z-index: 90; height: var(--ticker-h); background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); overflow: hidden; white-space: nowrap; display: flex; align-items: center; }
 .ticker-inner { display: inline-flex; gap: 40px; animation: tickerScroll 120s linear infinite; }
 @keyframes tickerScroll { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
 .ticker-item { font-family: 'Space Mono', monospace; font-size: 11px; display: inline-flex; gap: 6px; }

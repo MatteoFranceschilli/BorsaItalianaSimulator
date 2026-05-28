@@ -374,7 +374,7 @@ export default function App() {
       {/* CONTENT AREA - shifted right by sidebar */}
       <div className={`content-area${sidebarCollapsed ? " sidebar-collapsed" : ""}`}>
 
-      {/* TICKER TAPE */}
+      {/* TICKER TAPE — sticky below header */}
       <div className="ticker-tape">
         <div className="ticker-inner">
           {[...STOCKS, ...ETFS].map(i => {
@@ -391,37 +391,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* BREAKING NEWS BANNER */}
-      {activeEvents.length > 0 && (
-        <div
-          style={{
-            background: "rgba(255,109,0,0.15)",
-            borderBottom: "1px solid #ff6d00",
-            padding: "5px 16px",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            overflow: "hidden",
-            cursor: "pointer",
-          }}
-          onClick={() => setTab("notizie")}
-          title="Vai alla scheda Notizie"
-        >
-          <span style={{ fontFamily: "Space Mono", fontSize: 10, color: "#ff6d00", fontWeight: 700, flexShrink: 0, letterSpacing: 1 }}>
-            📡 BREAKING
-          </span>
-          <div style={{ overflow: "hidden", whiteSpace: "nowrap", flex: 1 }}>
-            <span style={{ fontSize: 11, color: "var(--gc)" }}>
-              {activeEvents.map(e => `${e.icon} ${e.title}`).join("  ·  ")}
-            </span>
-          </div>
-          <span style={{ fontFamily: "Space Mono", fontSize: 10, color: "#ff6d00", flexShrink: 0 }}>
-            {activeEvents.length} evento{activeEvents.length > 1 ? "i" : ""} attiv{activeEvents.length > 1 ? "i" : "o"} →
-          </span>
-        </div>
-      )}
-
-      {/* PORTFOLIO STRIP */}
+      {/* PORTFOLIO STRIP — sticky below ticker */}
       <div className="portfolio-strip">
         <div className="pf-metric">
           <span className="pf-label">Liquidità</span>
@@ -459,6 +429,36 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* BREAKING NEWS BANNER — scrolls with content, below fixed bars */}
+      {activeEvents.length > 0 && (
+        <div
+          style={{
+            background: "rgba(255,109,0,0.15)",
+            borderBottom: "1px solid #ff6d00",
+            padding: "5px 16px",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            overflow: "hidden",
+            cursor: "pointer",
+          }}
+          onClick={() => setTab("notizie")}
+          title="Vai alla scheda Notizie"
+        >
+          <span style={{ fontFamily: "Space Mono", fontSize: 10, color: "#ff6d00", fontWeight: 700, flexShrink: 0, letterSpacing: 1 }}>
+            📡 BREAKING
+          </span>
+          <div style={{ overflow: "hidden", whiteSpace: "nowrap", flex: 1 }}>
+            <span style={{ fontSize: 11, color: "var(--gc)" }}>
+              {activeEvents.map(e => `${e.icon} ${e.title}`).join("  ·  ")}
+            </span>
+          </div>
+          <span style={{ fontFamily: "Space Mono", fontSize: 10, color: "#ff6d00", flexShrink: 0 }}>
+            {activeEvents.length} evento{activeEvents.length > 1 ? "i" : ""} attiv{activeEvents.length > 1 ? "i" : "o"} →
+          </span>
+        </div>
+      )}
 
         {/* MAIN CONTENT */}
         <div className="main">
