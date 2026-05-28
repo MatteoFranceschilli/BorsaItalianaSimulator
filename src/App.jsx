@@ -35,17 +35,31 @@ import LeaderboardTab from "./components/tabs/LeaderboardTab.jsx";
 import WikiTab from "./components/tabs/WikiTab.jsx";
 
 const TABS = ["dashboard", "mercati", "trading", "portafoglio", "ordini", "storico", "analisi", "alert", "notizie", "classifica", "wiki"];
-const TAB_LABELS = {
-  dashboard:   "📊 Dashboard",
-  mercati:     "📈 Mercati",
-  trading:     "⚡ Trading",
-  portafoglio: "💼 Portafoglio",
-  storico:     "📋 Storico",
-  analisi:     "🔬 Analisi",
-  alert:       "🚨 Alert",
-  notizie:     "📰 Notizie",
-  classifica:  "🏆 Classifica",
-  wiki:        "📚 Wiki",
+const TAB_ICONS = {
+  dashboard:   "📊",
+  mercati:     "📈",
+  trading:     "⚡",
+  portafoglio: "💼",
+  ordini:      "🔔",
+  storico:     "📋",
+  analisi:     "🔬",
+  alert:       "🚨",
+  notizie:     "📰",
+  classifica:  "🏆",
+  wiki:        "📚",
+};
+const TAB_NAMES = {
+  dashboard:   "Dashboard",
+  mercati:     "Mercati",
+  trading:     "Trading",
+  portafoglio: "Portafoglio",
+  ordini:      "Ordini",
+  storico:     "Storico",
+  analisi:     "Analisi",
+  alert:       "Alert",
+  notizie:     "Notizie",
+  classifica:  "Classifica",
+  wiki:        "Wiki",
 };
 
 export default function App() {
@@ -70,7 +84,7 @@ export default function App() {
 
   // Active tab / UI state
   const [tab, setTab] = useState("dashboard");
-  const [tabsCollapsed, setTabsCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedInstr, setSelectedInstr] = useState(null);
   const [orderType, setOrderType] = useState("market");
   const [orderSide, setOrderSide] = useState("buy");
@@ -411,41 +425,43 @@ export default function App() {
         </div>
       </div>
 
-      {/* TABS */}
-      {tabsCollapsed ? (
-        <div className="tabs-mini-bar">
-          <span className="tabs-mini-label">
-            {tab === "ordini"
-              ? `🔔 Ordini (${orders.length})`
-              : tab === "notizie" && activeEvents.length > 0
-                ? `📰 Notizie (${activeEvents.length})`
-                : TAB_LABELS[tab]}
-          </span>
-          <button className="tabs-mini-toggle" onClick={() => setTabsCollapsed(false)} title="Espandi menu tab">
-            ☰ Menu ▼
-          </button>
-        </div>
-      ) : (
-        <div className="tabs-wrapper">
-          <div className="tabs">
-            {TABS.map(t => (
-              <button key={t} className={`tab ${tab === t ? "active" : ""}`} onClick={() => setTab(t)}>
-                {t === "ordini"
-                  ? `🔔 Ordini (${orders.length})`
-                  : t === "notizie" && activeEvents.length > 0
-                    ? `📰 Notizie (${activeEvents.length})`
-                    : TAB_LABELS[t]}
-              </button>
-            ))}
-          </div>
-          <button className="tabs-collapse-btn" onClick={() => setTabsCollapsed(true)} title="Comprimi menu tab">
-            ▲
-          </button>
-        </div>
-      )}
+      {/* BODY: sidebar + content */}
+      <div className="app-body">
 
-      {/* MAIN CONTENT */}
-      <div className="main">
+        {/* SIDEBAR */}
+        <nav className={`sidebar${sidebarCollapsed ? " collapsed" : ""}`}>
+          <div className="sidebar-tabs">
+            {TABS.map(t => {
+              const label = t === "ordini"
+                ? `Ordini${orders.length ? ` (${orders.length})` : ""}`
+                : t === "notizie" && activeEvents.length > 0
+                  ? `Notizie (${activeEvents.length})`
+                  : TAB_NAMES[t];
+              return (
+                <button
+                  key={t}
+                  className={`sidebar-tab${tab === t ? " active" : ""}`}
+                  onClick={() => setTab(t)}
+                  title={sidebarCollapsed ? label : undefined}
+                >
+                  <span className="sidebar-icon">{TAB_ICONS[t]}</span>
+                  {!sidebarCollapsed && <span className="sidebar-label">{label}</span>}
+                </button>
+              );
+            })}
+          </div>
+          <button
+            className="sidebar-toggle"
+            onClick={() => setSidebarCollapsed(s => !s)}
+            title={sidebarCollapsed ? "Espandi menu" : "Comprimi menu"}
+          >
+            <span className="sidebar-icon">{sidebarCollapsed ? "›" : "‹"}</span>
+            {!sidebarCollapsed && <span className="sidebar-label">Comprimi</span>}
+          </button>
+        </nav>
+
+        {/* MAIN CONTENT */}
+        <div className="main">
         {tab === "dashboard" && (
           <DashboardTab
             prices={prices}
@@ -570,7 +586,8 @@ export default function App() {
         )}
 
         {tab === "wiki" && <WikiTab />}
-      </div>
+        </div>{/* end .main */}
+      </div>{/* end .app-body */}
 
       {/* FLOATING ALERTS */}
       <div className="alerts-container">
