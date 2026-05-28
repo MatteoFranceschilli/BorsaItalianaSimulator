@@ -1,7 +1,10 @@
+import { useMemo } from "react";
 import { INDICES } from "../../data/indices.js";
 import { STOCKS } from "../../data/stocks.js";
-import { fmt, fmtEur, fmtPct, clr, clrCls } from "../../utils/formatters.js";
+import { fmt, fmtEur, fmtPct, clr } from "../../utils/formatters.js";
 import Sparkline from "../charts/Sparkline.jsx";
+import { useSortableTable } from "../../hooks/useSortableTable.js";
+import { TableSearch, SortableTh } from "../ui/TableControls.jsx";
 
 const CATEGORY_COLOR = {
   "Geopolitico": "#ff6d00", "Politico": "#ff9800", "Economico": "#29b6f6",
@@ -19,10 +22,46 @@ function fmtRemaining(seconds) {
 }
 
 export default function DashboardTab({ prices, priceHistory, cash, portfolioValue, totalValue, totalPnl, totalPnlPct, positions, activeEvents = [], onSelectInstr, onSetTab }) {
+  const enrichedStocks = useMemo(() =>
+    STOCKS
+      .filter(s => prices[s.id])
+      .map(s => ({ ...s, _current: prices[s.id].current, _pctChange: prices[s.id].pctChange })),
+    [prices]
+  );
+
+  const {
+    rows: gainerRows, sortKey: gSortKey, sortDir: gSortDir, handleSort: gHandleSort,
+    query: gQuery, setQuery: gSetQuery,
+  } = useSortableTable(enrichedStocks, {
+    defaultKey: "_pctChange",
+    defaultDir: "desc",
+    searchFn: (s, q) => s.id.toLowerCase().includes(q) || s.name.toLowerCase().includes(q),
+  });
+
+  const {
+    rows: loserRows, sortKey: lSortKey, sortDir: lSortDir, handleSort: lHandleSort,
+    query: lQuery, setQuery: lSetQuery,
+  } = useSortableTable(enrichedStocks, {
+    defaultKey: "_pctChange",
+    defaultDir: "asc",
+    searchFn: (s, q) => s.id.toLowerCase().includes(q) || s.name.toLowerCase().includes(q),
+  });
+
+  const {
+    rows: posRows, sortKey: pSortKey, sortDir: pSortDir, handleSort: pHandleSort,
+    query: pQuery, setQuery: pSetQuery,
+  } = useSortableTable(positions, {
+    searchFn: (pos, q) =>
+      pos.id.toLowerCase().includes(q) ||
+      (pos.name || "").toLowerCase().includes(q),
+  });
+
+  const displayedGainers = gQuery ? gainerRows : gainerRows.slice(0, 8);
+  const displayedLosers = lQuery ? loserRows : loserRows.slice(0, 8);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-      {/* Active events strip */}
       {activeEvents.length > 0 && (
         <div className="card" style={{ borderLeft: "3px solid #ff6d00" }}>
           <div className="card-header" style={{ cursor: "pointer" }} onClick={() => onSetTab("notizie")}>
@@ -52,7 +91,6 @@ export default function DashboardTab({ prices, priceHistory, cash, portfolioValu
         </div>
       )}
 
-      {/* Top indices */}
       <div className="grid3">
         {INDICES.map(idx => {
           const p = prices[idx.id];
@@ -76,7 +114,6 @@ export default function DashboardTab({ prices, priceHistory, cash, portfolioValu
           );
         })}
 
-        {/* Portfolio Summary */}
         <div className="card">
           <div className="card-header"><span className="card-title">Il Mio Portafoglio</span></div>
           <div style={{ padding: "10px 14px" }}>
@@ -104,25 +141,29 @@ export default function DashboardTab({ prices, priceHistory, cash, portfolioValu
         </div>
       </div>
 
-      {/* Top movers */}
       <div className="grid2">
         <div className="card">
           <div className="card-header"><span className="card-title">🚀 Top Rialzisti</span></div>
-          <div className="table-scroll" style={{ maxHeight: 220 }}>
+          <TableSearch query={gQuery} onChange={gSetQuery} placeholder="Cerca titolo..." />
+          <div className="table-scroll" style={{ maxHeight: 260 }}>
             <table>
-              <thead><tr><th>Titolo</th><th>Prezzo</th><th>Var%</th><th>Grafico</th></tr></thead>
+              <thead>
+                <tr>
+                  <SortableTh label="Titolo"  sk="id"         sortKey={gSortKey} sortDir={gSortDir} onSort={gHandleSort} />
+                  <SortableTh label="Prezzo"  sk="_current"   sortKey={gSortKey} sortDir={gSortDir} onSort={gHandleSort} style={{ textAlign: "right" }} />
+                  <SortableTh label="Var%"    sk="_pctChange" sortKey={gSortKey} sortDir={gSortDir} onSort={gHandleSort} style={{ textAlign: "right" }} />
+                  <th>Grafico</th>
+                </tr>
+              </thead>
               <tbody>
-                {[...STOCKS].sort((a, b) => (prices[b.id]?.pctChange || 0) - (prices[a.id]?.pctChange || 0)).slice(0, 8).map(s => {
-                  const p = prices[s.id];
-                  return (
-                    <tr key={s.id} style={{ cursor: "pointer" }} onClick={() => { onSelectInstr({ ...s, category: "Azioni" }); onSetTab("trading"); }}>
-                      <td style={{ color: "#e8c96c", fontFamily: "monospace", fontWeight: 700 }}>{s.id}</td>
-                      <td style={{ fontFamily: "monospace", fontSize: 12 }}>€{fmt(p?.current)}</td>
-                      <td style={{ color: clr(p?.pctChange || 0), fontFamily: "monospace", fontSize: 12 }}>{fmtPct(p?.pctChange || 0)}</td>
-                      <td><Sparkline data={priceHistory[s.id] || []} w={70} h={22} /></td>
-                    </tr>
-                  );
-                })}
+                {displayedGainers.map(s => (
+                  <tr key={s.id} style={{ cursor: "pointer" }} onClick={() => { onSelectInstr({ ...s, category: "Azioni" }); onSetTab("trading"); }}>
+                    <td style={{ color: "#e8c96c", fontFamily: "monospace", fontWeight: 700 }}>{s.id}</td>
+                    <td style={{ fontFamily: "monospace", fontSize: 12, textAlign: "right" }}>€{fmt(s._current)}</td>
+                    <td style={{ color: clr(s._pctChange), fontFamily: "monospace", fontSize: 12, textAlign: "right" }}>{fmtPct(s._pctChange)}</td>
+                    <td><Sparkline data={priceHistory[s.id] || []} w={70} h={22} /></td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -130,48 +171,59 @@ export default function DashboardTab({ prices, priceHistory, cash, portfolioValu
 
         <div className="card">
           <div className="card-header"><span className="card-title">📉 Top Ribassisti</span></div>
-          <div className="table-scroll" style={{ maxHeight: 220 }}>
+          <TableSearch query={lQuery} onChange={lSetQuery} placeholder="Cerca titolo..." />
+          <div className="table-scroll" style={{ maxHeight: 260 }}>
             <table>
-              <thead><tr><th>Titolo</th><th>Prezzo</th><th>Var%</th><th>Grafico</th></tr></thead>
+              <thead>
+                <tr>
+                  <SortableTh label="Titolo"  sk="id"         sortKey={lSortKey} sortDir={lSortDir} onSort={lHandleSort} />
+                  <SortableTh label="Prezzo"  sk="_current"   sortKey={lSortKey} sortDir={lSortDir} onSort={lHandleSort} style={{ textAlign: "right" }} />
+                  <SortableTh label="Var%"    sk="_pctChange" sortKey={lSortKey} sortDir={lSortDir} onSort={lHandleSort} style={{ textAlign: "right" }} />
+                  <th>Grafico</th>
+                </tr>
+              </thead>
               <tbody>
-                {[...STOCKS].sort((a, b) => (prices[a.id]?.pctChange || 0) - (prices[b.id]?.pctChange || 0)).slice(0, 8).map(s => {
-                  const p = prices[s.id];
-                  return (
-                    <tr key={s.id} style={{ cursor: "pointer" }} onClick={() => { onSelectInstr({ ...s, category: "Azioni" }); onSetTab("trading"); }}>
-                      <td style={{ color: "#e8c96c", fontFamily: "monospace", fontWeight: 700 }}>{s.id}</td>
-                      <td style={{ fontFamily: "monospace", fontSize: 12 }}>€{fmt(p?.current)}</td>
-                      <td style={{ color: clr(p?.pctChange || 0), fontFamily: "monospace", fontSize: 12 }}>{fmtPct(p?.pctChange || 0)}</td>
-                      <td><Sparkline data={priceHistory[s.id] || []} w={70} h={22} /></td>
-                    </tr>
-                  );
-                })}
+                {displayedLosers.map(s => (
+                  <tr key={s.id} style={{ cursor: "pointer" }} onClick={() => { onSelectInstr({ ...s, category: "Azioni" }); onSetTab("trading"); }}>
+                    <td style={{ color: "#e8c96c", fontFamily: "monospace", fontWeight: 700 }}>{s.id}</td>
+                    <td style={{ fontFamily: "monospace", fontSize: 12, textAlign: "right" }}>€{fmt(s._current)}</td>
+                    <td style={{ color: clr(s._pctChange), fontFamily: "monospace", fontSize: 12, textAlign: "right" }}>{fmtPct(s._pctChange)}</td>
+                    <td><Sparkline data={priceHistory[s.id] || []} w={70} h={22} /></td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      {/* Open positions preview */}
       {positions.length > 0 && (
         <div className="card">
           <div className="card-header"><span className="card-title">💼 Posizioni Aperte</span></div>
-          <div className="table-scroll" style={{ maxHeight: 200 }}>
+          <TableSearch query={pQuery} onChange={pSetQuery} placeholder="Cerca titolo..." />
+          <div className="table-scroll" style={{ maxHeight: 240 }}>
             <table>
               <thead>
                 <tr>
-                  <th>Titolo</th><th>Qtà</th><th>Prezzo Medio</th><th>Prezzo Attuale</th><th>Valore</th><th>P&L</th><th>P&L%</th>
+                  <SortableTh label="Titolo"        sk="id"           sortKey={pSortKey} sortDir={pSortDir} onSort={pHandleSort} />
+                  <SortableTh label="Qtà"           sk="qty"          sortKey={pSortKey} sortDir={pSortDir} onSort={pHandleSort} style={{ textAlign: "right" }} />
+                  <SortableTh label="Prezzo Medio"  sk="avgPrice"     sortKey={pSortKey} sortDir={pSortDir} onSort={pHandleSort} style={{ textAlign: "right" }} />
+                  <SortableTh label="Prezzo Attuale" sk="currentPrice" sortKey={pSortKey} sortDir={pSortDir} onSort={pHandleSort} style={{ textAlign: "right" }} />
+                  <SortableTh label="Valore"        sk="mktVal"       sortKey={pSortKey} sortDir={pSortDir} onSort={pHandleSort} style={{ textAlign: "right" }} />
+                  <SortableTh label="P&L"           sk="pnl"          sortKey={pSortKey} sortDir={pSortDir} onSort={pHandleSort} style={{ textAlign: "right" }} />
+                  <SortableTh label="P&L%"          sk="pnlPct"       sortKey={pSortKey} sortDir={pSortDir} onSort={pHandleSort} style={{ textAlign: "right" }} />
                 </tr>
               </thead>
               <tbody>
-                {positions.map(pos => (
+                {posRows.map(pos => (
                   <tr key={pos.id}>
                     <td style={{ color: "#e8c96c", fontWeight: 700, fontFamily: "monospace" }}>{pos.id}</td>
-                    <td style={{ fontFamily: "monospace" }}>{pos.qty}</td>
-                    <td style={{ fontFamily: "monospace", color: "var(--g8)" }}>€{fmt(pos.avgPrice)}</td>
-                    <td style={{ fontFamily: "monospace" }}>€{fmt(pos.currentPrice)}</td>
-                    <td style={{ fontFamily: "monospace" }}>€{fmt(pos.mktVal)}</td>
-                    <td style={{ fontFamily: "monospace", color: clr(pos.pnl) }}>{pos.pnl >= 0 ? "+" : ""}{fmtEur(pos.pnl)}</td>
-                    <td style={{ fontFamily: "monospace", color: clr(pos.pnlPct) }}>{fmtPct(pos.pnlPct)}</td>
+                    <td style={{ fontFamily: "monospace", textAlign: "right" }}>{pos.qty}</td>
+                    <td style={{ fontFamily: "monospace", color: "var(--g8)", textAlign: "right" }}>€{fmt(pos.avgPrice)}</td>
+                    <td style={{ fontFamily: "monospace", textAlign: "right" }}>€{fmt(pos.currentPrice)}</td>
+                    <td style={{ fontFamily: "monospace", textAlign: "right" }}>€{fmt(pos.mktVal)}</td>
+                    <td style={{ fontFamily: "monospace", color: clr(pos.pnl), textAlign: "right" }}>{pos.pnl >= 0 ? "+" : ""}{fmtEur(pos.pnl)}</td>
+                    <td style={{ fontFamily: "monospace", color: clr(pos.pnlPct), textAlign: "right" }}>{fmtPct(pos.pnlPct)}</td>
                   </tr>
                 ))}
               </tbody>

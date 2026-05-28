@@ -1,5 +1,8 @@
+import { useMemo } from "react";
 import { NPCS, NPC_ARCHETYPES } from "../../data/npcs.js";
 import { fmt, fmtEur, fmtPct, clr } from "../../utils/formatters.js";
+import { useSortableTable } from "../../hooks/useSortableTable.js";
+import { TableSearch, SortableTh } from "../ui/TableControls.jsx";
 
 function calcNPCValue(state, prices) {
   return state.cash + Object.entries(state.portfolio).reduce((sum, [id, pos]) => {
@@ -12,48 +15,63 @@ export default function LeaderboardTab({ npcStates, npcTrades, prices, playerNam
   const playerPnl = playerTotalValue - PLAYER_START;
   const playerPnlPct = (playerTotalValue / PLAYER_START - 1) * 100;
 
-  const entries = [
-    {
-      id: "__player__",
-      name: playerName || "Tu",
-      avatar: "🧑",
-      title: "Il Giocatore",
-      archetype: null,
-      totalValue: playerTotalValue,
-      pnl: playerPnl,
-      pnlPct: playerPnlPct,
-      startCash: PLAYER_START,
-      isPlayer: true,
-      positions: null,
-    },
-    ...NPCS.map(npc => {
-      const state = npcStates[npc.id] || { cash: npc.startCash, portfolio: {} };
-      const totalValue = calcNPCValue(state, prices);
-      return {
-        ...npc,
-        totalValue,
-        pnl: totalValue - npc.startCash,
-        pnlPct: (totalValue / npc.startCash - 1) * 100,
-        isPlayer: false,
-        positions: Object.keys(state.portfolio).length,
-        cash: state.cash,
-      };
-    }),
-  ].sort((a, b) => b.totalValue - a.totalValue);
+  const rankedEntries = useMemo(() => {
+    const all = [
+      {
+        id: "__player__",
+        name: playerName || "Tu",
+        avatar: "🧑",
+        title: "Il Giocatore",
+        archetype: null,
+        totalValue: playerTotalValue,
+        pnl: playerPnl,
+        pnlPct: playerPnlPct,
+        startCash: PLAYER_START,
+        isPlayer: true,
+        positions: null,
+        _archetypeLabel: "Giocatore",
+      },
+      ...NPCS.map(npc => {
+        const state = npcStates[npc.id] || { cash: npc.startCash, portfolio: {} };
+        const totalValue = calcNPCValue(state, prices);
+        const arch = NPC_ARCHETYPES[npc.archetype];
+        return {
+          ...npc,
+          totalValue,
+          pnl: totalValue - npc.startCash,
+          pnlPct: (totalValue / npc.startCash - 1) * 100,
+          isPlayer: false,
+          positions: Object.keys(state.portfolio).length,
+          cash: state.cash,
+          _archetypeLabel: arch?.label || "",
+        };
+      }),
+    ].sort((a, b) => b.totalValue - a.totalValue);
 
-  const playerRank = entries.findIndex(e => e.isPlayer) + 1;
+    return all.map((e, i) => ({ ...e, _rank: i + 1 }));
+  }, [npcStates, prices, playerName, playerTotalValue]);
+
+  const playerRank = rankedEntries.find(e => e.isPlayer)?._rank ?? 0;
   const rankEmoji = playerRank === 1 ? "🥇" : playerRank === 2 ? "🥈" : playerRank === 3 ? "🥉" : `#${playerRank}`;
+
+  const { rows, sortKey, sortDir, handleSort, query, setQuery } = useSortableTable(rankedEntries, {
+    defaultKey: "totalValue",
+    defaultDir: "desc",
+    searchFn: (e, q) =>
+      e.name.toLowerCase().includes(q) ||
+      (e.title || "").toLowerCase().includes(q) ||
+      e._archetypeLabel.toLowerCase().includes(q),
+  });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-      {/* Player rank banner */}
       <div className="card" style={{ borderLeft: `3px solid #e8c96c` }}>
         <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 16 }}>
           <span style={{ fontFamily: "Space Mono", fontSize: 36 }}>{rankEmoji}</span>
           <div>
             <div style={{ fontFamily: "Space Mono", fontSize: 13, fontWeight: 700, color: "var(--gc)" }}>
-              Sei in {playerRank}ª posizione su {entries.length} trader
+              Sei in {playerRank}ª posizione su {rankedEntries.length} trader
             </div>
             <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3 }}>
               Capitale totale: {fmtEur(playerTotalValue)} · P&L:{" "}
@@ -65,26 +83,26 @@ export default function LeaderboardTab({ npcStates, npcTrades, prices, playerNam
         </div>
       </div>
 
-      {/* Leaderboard table */}
       <div className="card">
         <div className="card-header"><span className="card-title">🏆 Classifica Trader</span></div>
+        <TableSearch query={query} onChange={setQuery} placeholder="Cerca per nome, strategia..." />
         <div className="table-scroll">
           <table>
             <thead>
               <tr>
-                <th>#</th>
-                <th>Trader</th>
-                <th>Strategia</th>
-                <th>Totale</th>
-                <th>P&L</th>
-                <th>P&L%</th>
-                <th>Pos.</th>
+                <SortableTh label="#"         sk="_rank"      sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                <SortableTh label="Trader"    sk="name"       sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                <SortableTh label="Strategia" sk="_archetypeLabel" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                <SortableTh label="Totale"    sk="totalValue" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+                <SortableTh label="P&L"       sk="pnl"        sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+                <SortableTh label="P&L%"      sk="pnlPct"     sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+                <SortableTh label="Pos."      sk="positions"  sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
               </tr>
             </thead>
             <tbody>
-              {entries.map((entry, idx) => {
+              {rows.map(entry => {
                 const arch = entry.archetype ? NPC_ARCHETYPES[entry.archetype] : null;
-                const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : null;
+                const medal = entry._rank === 1 ? "🥇" : entry._rank === 2 ? "🥈" : entry._rank === 3 ? "🥉" : null;
                 return (
                   <tr
                     key={entry.id}
@@ -92,9 +110,9 @@ export default function LeaderboardTab({ npcStates, npcTrades, prices, playerNam
                   >
                     <td style={{
                       fontFamily: "Space Mono", fontWeight: 700,
-                      color: idx === 0 ? "#ffd700" : idx === 1 ? "#c0c0c0" : idx === 2 ? "#cd7f32" : "var(--text3)",
+                      color: entry._rank === 1 ? "#ffd700" : entry._rank === 2 ? "#c0c0c0" : entry._rank === 3 ? "#cd7f32" : "var(--text3)",
                     }}>
-                      {medal || `#${idx + 1}`}
+                      {medal || `#${entry._rank}`}
                     </td>
                     <td>
                       <span style={{ fontSize: 15 }}>{entry.avatar}</span>{" "}
@@ -124,16 +142,16 @@ export default function LeaderboardTab({ npcStates, npcTrades, prices, playerNam
                         </span>
                       )}
                     </td>
-                    <td style={{ fontFamily: "Space Mono", fontSize: 12, color: "#e8c96c" }}>
+                    <td style={{ fontFamily: "Space Mono", fontSize: 12, color: "#e8c96c", textAlign: "right" }}>
                       {fmtEur(entry.totalValue)}
                     </td>
-                    <td style={{ fontFamily: "Space Mono", fontSize: 12, color: clr(entry.pnl) }}>
+                    <td style={{ fontFamily: "Space Mono", fontSize: 12, color: clr(entry.pnl), textAlign: "right" }}>
                       {entry.pnl >= 0 ? "+" : ""}{fmtEur(entry.pnl)}
                     </td>
-                    <td style={{ fontFamily: "Space Mono", fontSize: 12, color: clr(entry.pnlPct) }}>
+                    <td style={{ fontFamily: "Space Mono", fontSize: 12, color: clr(entry.pnlPct), textAlign: "right" }}>
                       {fmtPct(entry.pnlPct)}
                     </td>
-                    <td style={{ fontFamily: "Space Mono", fontSize: 12, color: "var(--text2)" }}>
+                    <td style={{ fontFamily: "Space Mono", fontSize: 12, color: "var(--text2)", textAlign: "right" }}>
                       {entry.isPlayer ? "—" : entry.positions}
                     </td>
                   </tr>
@@ -144,7 +162,6 @@ export default function LeaderboardTab({ npcStates, npcTrades, prices, playerNam
         </div>
       </div>
 
-      {/* NPC profiles */}
       <div className="card">
         <div className="card-header"><span className="card-title">👥 Profili Trader NPC</span></div>
         <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -192,7 +209,6 @@ export default function LeaderboardTab({ npcStates, npcTrades, prices, playerNam
         </div>
       </div>
 
-      {/* Recent NPC trades feed */}
       {npcTrades.length > 0 && (
         <div className="card">
           <div className="card-header">

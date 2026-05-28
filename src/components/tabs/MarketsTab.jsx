@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ALL_INSTRUMENTS } from "../../data/instruments.js";
 import { fmt, fmtPct, clr } from "../../utils/formatters.js";
 import Sparkline from "../charts/Sparkline.jsx";
+import { useSortableTable } from "../../hooks/useSortableTable.js";
+import { TableSearch, SortableTh } from "../ui/TableControls.jsx";
 
 const SUBTABS = ["Azioni", "ETF/ETC", "Obbligazioni", "Derivati", "Fondo"];
 
@@ -38,7 +40,29 @@ function InstrumentRow({ instr, prices, priceHistory, selectedId, onSelect, onBu
 export default function MarketsTab({ prices, priceHistory, selectedInstr, onSelectInstr, onSetTab, onSetOrderSide }) {
   const [subTab, setSubTab] = useState("Azioni");
 
-  const filtered = ALL_INSTRUMENTS.filter(i => i.category === subTab);
+  const enriched = useMemo(() =>
+    ALL_INSTRUMENTS
+      .filter(i => i.category === subTab)
+      .map(i => {
+        const p = prices[i.id] || {};
+        return {
+          ...i,
+          _current: p.current || 0,
+          _pctChange: p.pctChange || 0,
+          _high: p.high || 0,
+          _low: p.low || 0,
+          _sector: i.sector || i.type || i.category || "",
+        };
+      }),
+    [subTab, prices]
+  );
+
+  const { rows, sortKey, sortDir, handleSort, query, setQuery } = useSortableTable(enriched, {
+    searchFn: (row, q) =>
+      row.id.toLowerCase().includes(q) ||
+      row.name.toLowerCase().includes(q) ||
+      row._sector.toLowerCase().includes(q),
+  });
 
   const handleBuy = (instr) => { onSelectInstr(instr); onSetOrderSide("buy"); onSetTab("trading"); };
   const handleSell = (instr) => { onSelectInstr(instr); onSetOrderSide("sell"); onSetTab("trading"); };
@@ -50,22 +74,23 @@ export default function MarketsTab({ prices, priceHistory, selectedInstr, onSele
           <button key={st} className={`sub-chip ${subTab === st ? "active" : ""}`} onClick={() => setSubTab(st)}>{st}</button>
         ))}
       </div>
+      <TableSearch query={query} onChange={setQuery} placeholder="Cerca per codice, nome, settore..." />
       <div className="table-scroll">
         <table>
           <thead>
             <tr>
-              <th>Codice</th>
-              <th>Nome</th>
-              <th>Settore</th>
-              <th style={{ textAlign: "right" }}>Prezzo</th>
-              <th style={{ textAlign: "right" }}>Var%</th>
-              <th style={{ textAlign: "right" }}>H/L Giornaliero</th>
+              <SortableTh label="Codice"          sk="id"         sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Nome"             sk="name"       sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Settore"          sk="_sector"    sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Prezzo"           sk="_current"   sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+              <SortableTh label="Var%"             sk="_pctChange" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+              <SortableTh label="H/L Giornaliero" sk="_high"      sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
               <th>Trend</th>
               <th>Azioni</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map(i => (
+            {rows.map(i => (
               <InstrumentRow
                 key={i.id}
                 instr={i}

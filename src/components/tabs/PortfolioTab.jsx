@@ -1,7 +1,16 @@
 import { fmt, fmtEur, fmtPct, clr } from "../../utils/formatters.js";
 import Sparkline from "../charts/Sparkline.jsx";
+import { useSortableTable } from "../../hooks/useSortableTable.js";
+import { TableSearch, SortableTh } from "../ui/TableControls.jsx";
 
 export default function PortfolioTab({ cash, portfolioValue, totalValue, totalPnl, totalPnlPct, positions, tradesCount, priceHistory, onClose }) {
+  const { rows, sortKey, sortDir, handleSort, query, setQuery } = useSortableTable(positions, {
+    searchFn: (pos, q) =>
+      pos.id.toLowerCase().includes(q) ||
+      pos.name.toLowerCase().includes(q) ||
+      (pos.category || "").toLowerCase().includes(q),
+  });
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="grid3">
@@ -33,25 +42,26 @@ export default function PortfolioTab({ cash, portfolioValue, totalValue, totalPn
           <div className="card-header">
             <span className="card-title">📊 Posizioni Aperte ({positions.length})</span>
           </div>
+          <TableSearch query={query} onChange={setQuery} placeholder="Cerca per codice, nome, categoria..." />
           <div className="table-scroll">
             <table>
               <thead>
                 <tr>
-                  <th>Codice</th>
-                  <th>Nome</th>
-                  <th>Categoria</th>
-                  <th style={{ textAlign: "right" }}>Qtà</th>
-                  <th style={{ textAlign: "right" }}>Pr. Medio</th>
-                  <th style={{ textAlign: "right" }}>Pr. Attuale</th>
-                  <th style={{ textAlign: "right" }}>Valore Mkt</th>
-                  <th style={{ textAlign: "right" }}>P&L €</th>
-                  <th style={{ textAlign: "right" }}>P&L %</th>
+                  <SortableTh label="Codice"     sk="id"           sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                  <SortableTh label="Nome"        sk="name"         sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                  <SortableTh label="Categoria"   sk="category"     sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                  <SortableTh label="Qtà"         sk="qty"          sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+                  <SortableTh label="Pr. Medio"   sk="avgPrice"     sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+                  <SortableTh label="Pr. Attuale" sk="currentPrice" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+                  <SortableTh label="Valore Mkt"  sk="mktVal"       sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+                  <SortableTh label="P&L €"       sk="pnl"          sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+                  <SortableTh label="P&L %"       sk="pnlPct"       sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
                   <th>Trend</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {positions.map(pos => (
+                {rows.map(pos => (
                   <tr key={pos.id}>
                     <td style={{ color: "#e8c96c", fontWeight: 700, fontFamily: "monospace" }}>{pos.id}</td>
                     <td style={{ color: "var(--gc)", fontSize: 11 }}>{pos.name}</td>

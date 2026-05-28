@@ -1,7 +1,25 @@
+import { useMemo } from "react";
 import { ALL_INSTRUMENTS } from "../../data/instruments.js";
 import { fmt, fmtPct, clr } from "../../utils/formatters.js";
+import { useSortableTable } from "../../hooks/useSortableTable.js";
+import { TableSearch, SortableTh } from "../ui/TableControls.jsx";
 
 export default function AlertsTab({ priceAlerts, alerts, prices, alertInstr, alertPrice, alertDir, onAlertInstrChange, onAlertPriceChange, onAlertDirChange, onAddAlert, onRemoveAlert }) {
+  const enrichedAlerts = useMemo(() =>
+    priceAlerts.map(a => {
+      const cp = prices[a.instrId]?.current;
+      const dist = cp ? ((a.targetPrice / cp - 1) * 100) : null;
+      return { ...a, _cp: cp || 0, _dist: dist };
+    }),
+    [priceAlerts, prices]
+  );
+
+  const { rows, sortKey, sortDir, handleSort, query, setQuery } = useSortableTable(enrichedAlerts, {
+    searchFn: (a, q) =>
+      a.instrId.toLowerCase().includes(q) ||
+      a.dir.includes(q),
+  });
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="card">
@@ -36,33 +54,39 @@ export default function AlertsTab({ priceAlerts, alerts, prices, alertInstr, ale
         {priceAlerts.length === 0 ? (
           <div style={{ padding: 30, textAlign: "center", color: "var(--text3)" }}>Nessun alert impostato</div>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Strumento</th><th>Condizione</th><th>Target</th><th>Prezzo Attuale</th><th>Distanza</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {priceAlerts.map(a => {
-                const cp = prices[a.instrId]?.current;
-                const dist = cp ? ((a.targetPrice / cp - 1) * 100) : null;
-                return (
-                  <tr key={a.id}>
-                    <td style={{ color: "#e8c96c", fontWeight: 700, fontFamily: "monospace" }}>{a.instrId}</td>
-                    <td style={{ color: "var(--g8)" }}>{a.dir === "above" ? "Supera ≥" : "Scende ≤"}</td>
-                    <td style={{ fontFamily: "monospace", color: "#ffc107" }}>€{fmt(a.targetPrice)}</td>
-                    <td style={{ fontFamily: "monospace" }}>€{fmt(cp)}</td>
-                    <td style={{ fontFamily: "monospace", color: clr(dist || 0), fontSize: 12 }}>
-                      {dist !== null ? fmtPct(dist) : "—"}
-                    </td>
-                    <td>
-                      <button className="btn-outline" onClick={() => onRemoveAlert(a.id)}>✕</button>
-                    </td>
+          <>
+            <TableSearch query={query} onChange={setQuery} placeholder="Cerca per strumento..." />
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <SortableTh label="Strumento"      sk="instrId"      sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                    <SortableTh label="Condizione"     sk="dir"          sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                    <SortableTh label="Target"         sk="targetPrice"  sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+                    <SortableTh label="Prezzo Attuale" sk="_cp"          sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+                    <SortableTh label="Distanza"       sk="_dist"        sortKey={sortKey} sortDir={sortDir} onSort={handleSort} style={{ textAlign: "right" }} />
+                    <th></th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {rows.map(a => (
+                    <tr key={a.id}>
+                      <td style={{ color: "#e8c96c", fontWeight: 700, fontFamily: "monospace" }}>{a.instrId}</td>
+                      <td style={{ color: "var(--g8)" }}>{a.dir === "above" ? "Supera ≥" : "Scende ≤"}</td>
+                      <td style={{ fontFamily: "monospace", color: "#ffc107", textAlign: "right" }}>€{fmt(a.targetPrice)}</td>
+                      <td style={{ fontFamily: "monospace", textAlign: "right" }}>€{fmt(a._cp)}</td>
+                      <td style={{ fontFamily: "monospace", color: clr(a._dist || 0), fontSize: 12, textAlign: "right" }}>
+                        {a._dist !== null ? fmtPct(a._dist) : "—"}
+                      </td>
+                      <td>
+                        <button className="btn-outline" onClick={() => onRemoveAlert(a.id)}>✕</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
