@@ -70,6 +70,7 @@ export default function App() {
 
   // Active tab / UI state
   const [tab, setTab] = useState("dashboard");
+  const [tabsCollapsed, setTabsCollapsed] = useState(false);
   const [selectedInstr, setSelectedInstr] = useState(null);
   const [orderType, setOrderType] = useState("market");
   const [orderSide, setOrderSide] = useState("buy");
@@ -411,17 +412,35 @@ export default function App() {
       </div>
 
       {/* TABS */}
-      <div className="tabs">
-        {TABS.map(t => (
-          <button key={t} className={`tab ${tab === t ? "active" : ""}`} onClick={() => setTab(t)}>
-            {t === "ordini"
+      {tabsCollapsed ? (
+        <div className="tabs-mini-bar">
+          <span className="tabs-mini-label">
+            {tab === "ordini"
               ? `🔔 Ordini (${orders.length})`
-              : t === "notizie" && activeEvents.length > 0
+              : tab === "notizie" && activeEvents.length > 0
                 ? `📰 Notizie (${activeEvents.length})`
-                : TAB_LABELS[t]}
+                : TAB_LABELS[tab]}
+          </span>
+          <button className="tabs-mini-toggle" onClick={() => setTabsCollapsed(false)} title="Espandi menu tab">
+            ☰ Menu ▼
           </button>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="tabs">
+          {TABS.map(t => (
+            <button key={t} className={`tab ${tab === t ? "active" : ""}`} onClick={() => setTab(t)}>
+              {t === "ordini"
+                ? `🔔 Ordini (${orders.length})`
+                : t === "notizie" && activeEvents.length > 0
+                  ? `📰 Notizie (${activeEvents.length})`
+                  : TAB_LABELS[t]}
+            </button>
+          ))}
+          <button className="tabs-collapse-btn" onClick={() => setTabsCollapsed(true)} title="Comprimi menu tab">
+            ▲
+          </button>
+        </div>
+      )}
 
       {/* MAIN CONTENT */}
       <div className="main">

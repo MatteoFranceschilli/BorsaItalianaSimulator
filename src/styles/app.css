@@ -183,6 +183,62 @@ input.s-input:focus { border-color: #e8c96c; }
 .tab:hover { color: var(--text2); }
 .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
 
+/* collapse button appended inside .tabs */
+.tabs-collapse-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 0 14px;
+  background: none;
+  border: none;
+  border-left: 1px solid var(--border);
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 12px;
+  height: 100%;
+  transition: color 0.2s;
+}
+.tabs-collapse-btn:hover { color: var(--gold); }
+
+/* mini-bar shown when tabs are collapsed */
+.tabs-mini-bar {
+  display: flex;
+  align-items: center;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  height: 44px;
+  gap: 10px;
+}
+.tabs-mini-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold);
+  flex: 1;
+}
+.tabs-mini-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text3);
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+.tabs-mini-toggle:hover { color: var(--gold); border-color: var(--gold); }
+
+/* light theme overrides */
+.theme-light .tabs-collapse-btn { color: #6a7a8a; border-left-color: var(--border); }
+.theme-light .tabs-collapse-btn:hover { color: var(--gold); }
+.theme-light .tabs-mini-bar { background: #fff; border-color: var(--border); }
+.theme-light .tabs-mini-toggle { color: #6a7a8a; }
+.theme-light .tabs-mini-toggle:hover { color: var(--gold); border-color: var(--gold); }
+
 /* ── MAIN ── */
 .main { padding: 20px; }
 
