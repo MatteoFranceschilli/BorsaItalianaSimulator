@@ -426,16 +426,18 @@ export default function App() {
           </button>
         </div>
       ) : (
-        <div className="tabs">
-          {TABS.map(t => (
-            <button key={t} className={`tab ${tab === t ? "active" : ""}`} onClick={() => setTab(t)}>
-              {t === "ordini"
-                ? `🔔 Ordini (${orders.length})`
-                : t === "notizie" && activeEvents.length > 0
-                  ? `📰 Notizie (${activeEvents.length})`
-                  : TAB_LABELS[t]}
-            </button>
-          ))}
+        <div className="tabs-wrapper">
+          <div className="tabs">
+            {TABS.map(t => (
+              <button key={t} className={`tab ${tab === t ? "active" : ""}`} onClick={() => setTab(t)}>
+                {t === "ordini"
+                  ? `🔔 Ordini (${orders.length})`
+                  : t === "notizie" && activeEvents.length > 0
+                    ? `📰 Notizie (${activeEvents.length})`
+                    : TAB_LABELS[t]}
+              </button>
+            ))}
+          </div>
           <button className="tabs-collapse-btn" onClick={() => setTabsCollapsed(true)} title="Comprimi menu tab">
             ▲
           </button>

@@ -150,10 +150,18 @@ input.s-input:focus { border-color: #e8c96c; }
 .pf-value.gold { color: var(--gold); }
 
 /* ── TABS ── */
-.tabs {
+.tabs-wrapper {
   display: flex;
+  align-items: stretch;
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
+}
+.tabs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  background: transparent;
+  border-bottom: none;
   padding: 0;
   gap: 0;
   overflow-x: auto;
@@ -387,7 +395,8 @@ select option { background: var(--bg2); }
 .theme-light input:focus, .theme-light select:focus { border-color: var(--accent); }
 .theme-light select option { background: #fff; color: var(--text); }
 .theme-light .portfolio-strip { background: #fff; border-color: var(--border); }
-.theme-light .tabs { background: #fff; border-color: var(--border); }
+.theme-light .tabs-wrapper { background: #fff; border-color: var(--border); }
+.theme-light .tabs { background: transparent; border-color: var(--border); }
 .theme-light .tab { color: #6a7a8a; }
 .theme-light .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
 .theme-light .tab:hover { color: var(--text); }
