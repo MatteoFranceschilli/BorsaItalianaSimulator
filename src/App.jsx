@@ -15,6 +15,7 @@ import { usePriceAlerts } from "./hooks/usePriceAlerts.js";
 import { usePriceHistory } from "./hooks/usePriceHistory.js";
 import { useSaveSystem } from "./hooks/useSaveSystem.js";
 import { useSimulationEngine } from "./hooks/useSimulationEngine.js";
+import { useMarketEvents } from "./hooks/useMarketEvents.js";
 
 import StartScreen from "./components/screens/StartScreen.jsx";
 import NewGameScreen from "./components/screens/NewGameScreen.jsx";
@@ -28,18 +29,20 @@ import OrdersTab from "./components/tabs/OrdersTab.jsx";
 import HistoryTab from "./components/tabs/HistoryTab.jsx";
 import AnalyticsTab from "./components/tabs/AnalyticsTab.jsx";
 import AlertsTab from "./components/tabs/AlertsTab.jsx";
+import NewsTab from "./components/tabs/NewsTab.jsx";
 import WikiTab from "./components/tabs/WikiTab.jsx";
 
-const TABS = ["dashboard", "mercati", "trading", "portafoglio", "ordini", "storico", "analisi", "alert", "wiki"];
+const TABS = ["dashboard", "mercati", "trading", "portafoglio", "ordini", "storico", "analisi", "alert", "notizie", "wiki"];
 const TAB_LABELS = {
-  dashboard: "📊 Dashboard",
-  mercati: "📈 Mercati",
-  trading: "⚡ Trading",
+  dashboard:   "📊 Dashboard",
+  mercati:     "📈 Mercati",
+  trading:     "⚡ Trading",
   portafoglio: "💼 Portafoglio",
-  storico: "📋 Storico",
-  analisi: "🔬 Analisi",
-  alert: "🚨 Alert",
-  wiki: "📚 Wiki",
+  storico:     "📋 Storico",
+  analisi:     "🔬 Analisi",
+  alert:       "🚨 Alert",
+  notizie:     "📰 Notizie",
+  wiki:        "📚 Wiki",
 };
 
 export default function App() {
@@ -51,6 +54,7 @@ export default function App() {
   const { priceAlerts, setPriceAlerts, addPriceAlert, removePriceAlert } = usePriceAlerts();
   const { priceHistory, setPriceHistory, resetHistory } = usePriceHistory();
   const { savedGames, loadingGames, saveIdRef, updateSaveId, saveGame, loadSavedGames, loadGameData, deleteGame } = useSaveSystem();
+  const { activeEvents, pastEvents, checkRandomEvent, tickEvents, getEventModForSector, resetEvents } = useMarketEvents();
 
   // Screen routing
   const [screen, setScreen] = useState("start");
@@ -85,12 +89,10 @@ export default function App() {
   priceAlertsRef.current = priceAlerts;
 
   const saveGameRef = useRef(null);
-
-  // Keep prices accessible for auto-save inside the interval
   const pricesForSave = useRef({});
 
   const {
-    prices, setPrices, simTime, setSimTime,
+    prices, setPrices, simTime, setSimTimeBoth,
     marketStatus, setMarketStatus, marketSentiment, setMarketSentiment,
     tick, tRef, lastSaveRef, resetPrices,
   } = useSimulationEngine({
@@ -100,12 +102,13 @@ export default function App() {
     setPriceHistory,
     setCash, setPortfolio, setTrades, setOrders, setPriceAlerts,
     saveGameRef,
+    checkRandomEvent,
+    tickEvents,
+    getEventModForSector,
   });
 
-  // Keep pricesForSave updated
   pricesForSave.current = prices;
 
-  // Update saveGameRef every render so the interval always has fresh state
   saveGameRef.current = () => {
     saveGame({ playerName, cash, portfolio, trades, orders, priceAlerts, simTime, speed, prices: pricesForSave.current, priceHistory });
   };
@@ -145,7 +148,7 @@ export default function App() {
     setTrades(s.trades || []);
     setOrders(s.orders || []);
     setPriceAlerts(s.priceAlerts || []);
-    setSimTime(new Date(s.simTime));
+    setSimTimeBoth(new Date(s.simTime));
     setSpeed(s.speed || 24);
     tRef.current = 0;
     lastSaveRef.current = Date.now();
@@ -167,8 +170,9 @@ export default function App() {
     resetPortfolio();
     clearOrders();
     setPriceAlerts([]);
+    resetEvents();
     setMarketSentiment(0);
-    setSimTime(new Date("2025-01-02T09:00:00"));
+    setSimTimeBoth(new Date("2025-01-02T09:00:00"));
     setSpeed(24);
     setOrderMsg("");
     setSelectedInstr(null);
@@ -255,6 +259,36 @@ export default function App() {
           })}
         </div>
       </div>
+
+      {/* BREAKING NEWS BANNER (visible when events are active) */}
+      {activeEvents.length > 0 && (
+        <div
+          style={{
+            background: "rgba(255,109,0,0.15)",
+            borderBottom: "1px solid #ff6d00",
+            padding: "5px 16px",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            overflow: "hidden",
+            cursor: "pointer",
+          }}
+          onClick={() => setTab("notizie")}
+          title="Vai alla scheda Notizie"
+        >
+          <span style={{ fontFamily: "Space Mono", fontSize: 10, color: "#ff6d00", fontWeight: 700, flexShrink: 0, letterSpacing: 1 }}>
+            📡 BREAKING
+          </span>
+          <div style={{ overflow: "hidden", whiteSpace: "nowrap", flex: 1 }}>
+            <span style={{ fontSize: 11, color: "var(--gc)" }}>
+              {activeEvents.map(e => `${e.icon} ${e.title}`).join("  ·  ")}
+            </span>
+          </div>
+          <span style={{ fontFamily: "Space Mono", fontSize: 10, color: "#ff6d00", flexShrink: 0 }}>
+            {activeEvents.length} evento{activeEvents.length > 1 ? "i" : ""} attiv{activeEvents.length > 1 ? "i" : "o"} →
+          </span>
+        </div>
+      )}
 
       {/* HEADER */}
       <div className="header">
@@ -360,7 +394,11 @@ export default function App() {
       <div className="tabs">
         {TABS.map(t => (
           <button key={t} className={`tab ${tab === t ? "active" : ""}`} onClick={() => setTab(t)}>
-            {t === "ordini" ? `🔔 Ordini (${orders.length})` : TAB_LABELS[t]}
+            {t === "ordini"
+              ? `🔔 Ordini (${orders.length})`
+              : t === "notizie" && activeEvents.length > 0
+                ? `📰 Notizie (${activeEvents.length})`
+                : TAB_LABELS[t]}
           </button>
         ))}
       </div>
@@ -377,6 +415,7 @@ export default function App() {
             totalPnl={totalPnl}
             totalPnlPct={totalPnlPct}
             positions={positions}
+            activeEvents={activeEvents}
             onSelectInstr={setSelectedInstr}
             onSetTab={setTab}
           />
@@ -469,6 +508,13 @@ export default function App() {
             onAlertDirChange={setAlertDir}
             onAddAlert={handleAddPriceAlert}
             onRemoveAlert={removePriceAlert}
+          />
+        )}
+
+        {tab === "notizie" && (
+          <NewsTab
+            activeEvents={activeEvents}
+            pastEvents={pastEvents}
           />
         )}
 

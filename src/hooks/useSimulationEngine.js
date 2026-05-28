@@ -23,6 +23,9 @@ export function useSimulationEngine({
   setPriceHistory,
   setCash, setPortfolio, setTrades, setOrders, setPriceAlerts,
   saveGameRef,
+  checkRandomEvent,
+  tickEvents,
+  getEventModForSector,
 }) {
   const [prices, setPrices] = useState(buildInitialPrices);
   const [simTime, setSimTime] = useState(new Date("2025-01-02T09:00:00"));
@@ -37,13 +40,25 @@ export function useSimulationEngine({
   const marketSentimentRef = useRef(0);
   const pricesRef = useRef(buildInitialPrices());
 
+  // simTimeRef tracks current simTime without stale closure issues in the interval
+  const simTimeRef = useRef(new Date("2025-01-02T09:00:00"));
+
+  // Sets both React state and the ref (used by App.jsx when loading saves or resetting)
+  const setSimTimeBoth = (t) => {
+    const d = t instanceof Date ? t : new Date(t);
+    simTimeRef.current = d;
+    setSimTime(d);
+  };
+
   const resetPrices = () => {
     const p = buildInitialPrices();
     pricesRef.current = p;
     setPrices(p);
     tRef.current = 0;
     lastSaveRef.current = Date.now();
+    simTimeRef.current = new Date("2025-01-02T09:00:00");
     setSimTime(new Date("2025-01-02T09:00:00"));
+    marketSentimentRef.current = 0;
     setMarketSentiment(0);
   };
 
@@ -55,24 +70,41 @@ export function useSimulationEngine({
       tRef.current += simSeconds;
       const t = tRef.current;
 
-      // Advance sim time
-      setSimTime(prev => {
-        const next = new Date(prev.getTime() + simSeconds * 1000);
-        const status = checkMarketHours(next);
-        marketStatusRef.current = status;
-        setMarketStatus(status);
-        return next;
-      });
+      // Advance sim time via ref (avoids stale closure)
+      const nextTime = new Date(simTimeRef.current.getTime() + simSeconds * 1000);
+      simTimeRef.current = nextTime;
+      setSimTime(nextTime);
 
-      // Drift sentiment
+      const newStatus = checkMarketHours(nextTime);
+      marketStatusRef.current = newStatus;
+      setMarketStatus(newStatus);
+
+      // Tick active events (decrement remaining duration) — always, even when closed
+      if (tickEvents) tickEvents(simSeconds);
+
+      // Check for new random events — always
+      let triggeredEvents = [];
+      if (checkRandomEvent) {
+        triggeredEvents = checkRandomEvent(simSeconds, nextTime);
+      }
+
+      // Drift sentiment + apply event sentiment effects in a single update
       setMarketSentiment(prev => {
-        const next = Math.max(-3, Math.min(3, prev + gaussRand() * 0.3));
+        let next = Math.max(-3, Math.min(3, prev + gaussRand() * 0.3));
+        triggeredEvents.forEach(ev => {
+          next = Math.max(-3, Math.min(3, next + (ev.sentimentEffect || 0)));
+        });
         marketSentimentRef.current = next;
         return next;
       });
 
+      // Notify user of new events
+      triggeredEvents.forEach(ev => {
+        addAlert(`📰 ${ev.icon} BREAKING: ${ev.title}`, "warning");
+      });
+
       if (marketStatusRef.current === "APERTO") {
-        // Update prices using functional update to avoid stale closure
+        // Update prices
         setPrices(prev => {
           const next = { ...prev };
           prevPricesRef.current = { ...prev };
@@ -81,7 +113,8 @@ export function useSimulationEngine({
           const sentiment = marketSentimentRef.current;
 
           ALL_INSTRUMENTS.forEach(instr => {
-            const chg = generatePriceChange(instr, sentiment, simSeconds);
+            const eventMod = getEventModForSector ? getEventModForSector(instr.sector) : null;
+            const chg = generatePriceChange(instr, sentiment, simSeconds, eventMod);
             const oldP = next[instr.id].current;
             const newP = Math.max(oldP * 0.5, oldP * (1 + chg));
             next[instr.id] = {
@@ -195,5 +228,11 @@ export function useSimulationEngine({
     return () => clearInterval(intervalId);
   }, [running, speed]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { prices, setPrices, simTime, setSimTime, marketStatus, setMarketStatus, marketSentiment, setMarketSentiment, tick, tRef, lastSaveRef, resetPrices };
+  return {
+    prices, setPrices,
+    simTime, setSimTimeBoth,
+    marketStatus, setMarketStatus,
+    marketSentiment, setMarketSentiment,
+    tick, tRef, lastSaveRef, resetPrices,
+  };
 }

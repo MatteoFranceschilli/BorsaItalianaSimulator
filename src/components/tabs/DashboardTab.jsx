@@ -3,9 +3,55 @@ import { STOCKS } from "../../data/stocks.js";
 import { fmt, fmtEur, fmtPct, clr, clrCls } from "../../utils/formatters.js";
 import Sparkline from "../charts/Sparkline.jsx";
 
-export default function DashboardTab({ prices, priceHistory, cash, portfolioValue, totalValue, totalPnl, totalPnlPct, positions, onSelectInstr, onSetTab }) {
+const CATEGORY_COLOR = {
+  "Geopolitico": "#ff6d00", "Politico": "#ff9800", "Economico": "#29b6f6",
+  "Energia": "#ffc107", "Tecnologia": "#7c4dff", "Disastro Naturale": "#ff1744",
+  "Sanitario": "#00e676", "Corporate": "#e8c96c", "Sociale": "#888",
+  "Mercato": "#26c6da", "Immobiliare": "#ef9a9a",
+};
+
+function fmtRemaining(seconds) {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  if (d > 0) return `${d}g ${h}h`;
+  const m = Math.floor((seconds % 3600) / 60);
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+export default function DashboardTab({ prices, priceHistory, cash, portfolioValue, totalValue, totalPnl, totalPnlPct, positions, activeEvents = [], onSelectInstr, onSetTab }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+      {/* Active events strip */}
+      {activeEvents.length > 0 && (
+        <div className="card" style={{ borderLeft: "3px solid #ff6d00" }}>
+          <div className="card-header" style={{ cursor: "pointer" }} onClick={() => onSetTab("notizie")}>
+            <span className="card-title">📡 Eventi di Mercato Attivi</span>
+            <span style={{ fontSize: 10, fontFamily: "Space Mono", color: "#ff6d00" }}>Vai a Notizie →</span>
+          </div>
+          <div style={{ padding: "8px 14px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+            {activeEvents.map(ev => {
+              const color = CATEGORY_COLOR[ev.category] || "#888";
+              const pct = (ev.remainingSeconds / ev.totalDuration) * 100;
+              return (
+                <div key={ev.instanceId} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>{ev.icon}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                      <span style={{ fontFamily: "Space Mono", fontSize: 11, fontWeight: 700, color: "var(--gc)" }}>{ev.title}</span>
+                      <span style={{ fontSize: 10, fontFamily: "Space Mono", color: "#ffc107", flexShrink: 0 }}>⏱ {fmtRemaining(ev.remainingSeconds)}</span>
+                    </div>
+                    <div style={{ height: 3, background: "var(--bg3)", borderRadius: 2, overflow: "hidden" }}>
+                      <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 2 }} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Top indices */}
       <div className="grid3">
         {INDICES.map(idx => {
