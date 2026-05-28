@@ -26,6 +26,7 @@ export function useSimulationEngine({
   checkRandomEvent,
   tickEvents,
   getEventModForSector,
+  npcPressureRef,
 }) {
   const [prices, setPrices] = useState(buildInitialPrices);
   const [simTime, setSimTime] = useState(new Date("2025-01-02T09:00:00"));
@@ -88,9 +89,12 @@ export function useSimulationEngine({
         triggeredEvents = checkRandomEvent(simSeconds, nextTime);
       }
 
-      // Drift sentiment + apply event sentiment effects in a single update
+      // Drift sentiment + apply event sentiment effects + NPC collective pressure
       setMarketSentiment(prev => {
         let next = Math.max(-3, Math.min(3, prev + gaussRand() * 0.3));
+        if (npcPressureRef?.current) {
+          next = Math.max(-3, Math.min(3, next + npcPressureRef.current * 0.3));
+        }
         triggeredEvents.forEach(ev => {
           next = Math.max(-3, Math.min(3, next + (ev.sentimentEffect || 0)));
         });

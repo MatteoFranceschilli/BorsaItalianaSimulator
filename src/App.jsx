@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 import { ALL_INSTRUMENTS } from "./data/instruments.js";
 import { STOCKS } from "./data/stocks.js";
@@ -16,6 +16,7 @@ import { usePriceHistory } from "./hooks/usePriceHistory.js";
 import { useSaveSystem } from "./hooks/useSaveSystem.js";
 import { useSimulationEngine } from "./hooks/useSimulationEngine.js";
 import { useMarketEvents } from "./hooks/useMarketEvents.js";
+import { useNPCTraders } from "./hooks/useNPCTraders.js";
 
 import StartScreen from "./components/screens/StartScreen.jsx";
 import NewGameScreen from "./components/screens/NewGameScreen.jsx";
@@ -30,9 +31,10 @@ import HistoryTab from "./components/tabs/HistoryTab.jsx";
 import AnalyticsTab from "./components/tabs/AnalyticsTab.jsx";
 import AlertsTab from "./components/tabs/AlertsTab.jsx";
 import NewsTab from "./components/tabs/NewsTab.jsx";
+import LeaderboardTab from "./components/tabs/LeaderboardTab.jsx";
 import WikiTab from "./components/tabs/WikiTab.jsx";
 
-const TABS = ["dashboard", "mercati", "trading", "portafoglio", "ordini", "storico", "analisi", "alert", "notizie", "wiki"];
+const TABS = ["dashboard", "mercati", "trading", "portafoglio", "ordini", "storico", "analisi", "alert", "notizie", "classifica", "wiki"];
 const TAB_LABELS = {
   dashboard:   "📊 Dashboard",
   mercati:     "📈 Mercati",
@@ -42,6 +44,7 @@ const TAB_LABELS = {
   analisi:     "🔬 Analisi",
   alert:       "🚨 Alert",
   notizie:     "📰 Notizie",
+  classifica:  "🏆 Classifica",
   wiki:        "📚 Wiki",
 };
 
@@ -55,6 +58,7 @@ export default function App() {
   const { priceHistory, setPriceHistory, resetHistory } = usePriceHistory();
   const { savedGames, loadingGames, saveIdRef, updateSaveId, saveGame, loadSavedGames, loadGameData, deleteGame } = useSaveSystem();
   const { activeEvents, pastEvents, checkRandomEvent, tickEvents, getEventModForSector, resetEvents } = useMarketEvents();
+  const { npcStates, npcTrades, tickNPCs, npcPressureRef, resetNPCs } = useNPCTraders();
 
   // Screen routing
   const [screen, setScreen] = useState("start");
@@ -91,6 +95,11 @@ export default function App() {
   const saveGameRef = useRef(null);
   const pricesForSave = useRef({});
 
+  // Refs for NPC tick (avoid stale closures in useEffect)
+  const pricesForNPC = useRef({});
+  const priceHistoryForNPC = useRef({});
+  const activeEventsForNPC = useRef([]);
+
   const {
     prices, setPrices, simTime, setSimTimeBoth,
     marketStatus, setMarketStatus, marketSentiment, setMarketSentiment,
@@ -105,9 +114,19 @@ export default function App() {
     checkRandomEvent,
     tickEvents,
     getEventModForSector,
+    npcPressureRef,
   });
 
   pricesForSave.current = prices;
+  pricesForNPC.current = prices;
+  priceHistoryForNPC.current = priceHistory;
+  activeEventsForNPC.current = activeEvents;
+
+  // Tick NPC traders every simulation tick while market is open
+  useEffect(() => {
+    if (!running) return;
+    tickNPCs(pricesForNPC.current, priceHistoryForNPC.current, activeEventsForNPC.current);
+  }, [tick]); // eslint-disable-line
 
   saveGameRef.current = () => {
     saveGame({ playerName, cash, portfolio, trades, orders, priceAlerts, simTime, speed, prices: pricesForSave.current, priceHistory });
@@ -171,6 +190,7 @@ export default function App() {
     clearOrders();
     setPriceAlerts([]);
     resetEvents();
+    resetNPCs();
     setMarketSentiment(0);
     setSimTimeBoth(new Date("2025-01-02T09:00:00"));
     setSpeed(24);
@@ -515,6 +535,16 @@ export default function App() {
           <NewsTab
             activeEvents={activeEvents}
             pastEvents={pastEvents}
+          />
+        )}
+
+        {tab === "classifica" && (
+          <LeaderboardTab
+            npcStates={npcStates}
+            npcTrades={npcTrades}
+            prices={prices}
+            playerName={playerName}
+            playerTotalValue={totalValue}
           />
         )}
 
