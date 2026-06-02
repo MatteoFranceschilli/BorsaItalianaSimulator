@@ -214,16 +214,16 @@ export default function LeaderboardTab({ npcStates, npcTrades, prices, playerNam
           <div className="card-header">
             <span className="card-title">🔔 Operazioni Recenti NPC</span>
             <span style={{ fontSize: 10, fontFamily: "Space Mono", color: "var(--text3)" }}>
-              ultime {Math.min(npcTrades.length, 20)}
+              ultime {Math.min(npcTrades.length, 40)}
             </span>
           </div>
           <div style={{ padding: "10px 16px", display: "flex", flexDirection: "column", gap: 4 }}>
-            {npcTrades.slice(0, 20).map((trade, i) => (
+            {npcTrades.slice(0, 40).map((trade, i) => (
               <div
                 key={`${trade.npcId}_${trade.t}_${i}`}
                 style={{
                   display: "flex", alignItems: "center", gap: 8, fontSize: 11,
-                  borderBottom: i < Math.min(npcTrades.length, 20) - 1 ? "1px solid var(--border2)" : "none",
+                  borderBottom: i < Math.min(npcTrades.length, 40) - 1 ? "1px solid var(--border2)" : "none",
                   paddingBottom: 4,
                 }}
               >

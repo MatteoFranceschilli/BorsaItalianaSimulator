@@ -334,7 +334,7 @@ export function useNPCTraders() {
     if (changed) {
       statesRef.current = states;
       setNpcStates({ ...states });
-      setNpcTrades(prev => [...newTrades, ...prev].slice(0, 30));
+      setNpcTrades(prev => [...newTrades, ...prev].slice(0, 60));
     }
   };
 
