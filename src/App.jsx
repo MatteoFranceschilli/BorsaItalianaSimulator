@@ -154,10 +154,12 @@ export default function App() {
   const totalPnlPct = (totalValue / 1000 - 1) * 100;
 
   const positions = Object.entries(portfolio).map(([id, pos]) => {
-    const cp = prices[id]?.current || pos.avgPrice;
-    const mktVal = cp * pos.qty;
-    const pnl = (cp - pos.avgPrice) * pos.qty;
-    const pnlPct = (cp / pos.avgPrice - 1) * 100;
+    const cp = prices[id]?.current || pos.avgPrice || 0;
+    const avg = pos.avgPrice || 0;
+    const qty = pos.qty || 0;
+    const mktVal = cp * qty;
+    const pnl = (cp - avg) * qty;
+    const pnlPct = avg > 0 ? (cp / avg - 1) * 100 : 0;
     const instr = ALL_INSTRUMENTS.find(i => i.id === id);
     return { id, ...pos, currentPrice: cp, mktVal, pnl, pnlPct, name: instr?.name || id, category: instr?.category };
   });
@@ -171,8 +173,8 @@ export default function App() {
     setScreen("playing");
   };
 
-  const handleLoadGame = (id) => {
-    const s = loadGameData(id);
+  const handleLoadGame = async (id) => {
+    const s = await loadGameData(id);
     if (!s) return;
     setRunning(false);
     setPlayerName(s.playerName);
