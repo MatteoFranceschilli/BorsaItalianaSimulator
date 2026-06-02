@@ -1,23 +1,15 @@
 import { useState, useRef, useCallback } from "react";
 
-const STORAGE_KEY = "borsa_all_saves";
+const CLIENT_KEY_STORAGE = "borsa_client_key";
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
-function storageGet(key) {
-  try {
-    const v = localStorage.getItem(key);
-    return v ? { value: v } : null;
-  } catch {
-    return null;
+function getClientKey() {
+  let key = localStorage.getItem(CLIENT_KEY_STORAGE);
+  if (!key) {
+    key = crypto.randomUUID();
+    localStorage.setItem(CLIENT_KEY_STORAGE, key);
   }
-}
-
-function storageSet(key, value) {
-  try {
-    localStorage.setItem(key, value);
-    return true;
-  } catch {
-    return false;
-  }
+  return key;
 }
 
 export function useSaveSystem() {
@@ -25,6 +17,7 @@ export function useSaveSystem() {
   const [loadingGames, setLoadingGames] = useState(false);
   const [saveId, setSaveId] = useState(null);
   const saveIdRef = useRef(null);
+  const clientKey = useRef(getClientKey());
 
   const updateSaveId = (id) => { saveIdRef.current = id; setSaveId(id); };
 
@@ -37,7 +30,8 @@ export function useSaveSystem() {
         .reduce((s, [pid, pos]) => s + (explicitState.prices?.[pid]?.current || 0) * pos.qty, 0);
 
       const saveEntry = {
-        id,
+        saveId:         id,
+        clientKey:      clientKey.current,
         savedAt:        new Date().toISOString(),
         playerName:     explicitState.playerName || "",
         cash:           Math.round((explicitState.cash || 0) * 100) / 100,
@@ -50,14 +44,15 @@ export function useSaveSystem() {
         trades:         (explicitState.trades || []).slice(0, 50),
       };
 
-      let allSaves = [];
-      try {
-        const raw = storageGet(STORAGE_KEY);
-        if (raw && raw.value) allSaves = JSON.parse(raw.value);
-      } catch {}
-
-      const updated = [saveEntry, ...allSaves.filter(s => s.id !== id)].slice(0, 10);
-      storageSet(STORAGE_KEY, JSON.stringify(updated));
+      const res = await fetch(`${API_BASE}/api/saves`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(saveEntry),
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
       return true;
     } catch (e) {
       console.error("[saveGame]", e?.message || e);
@@ -65,34 +60,39 @@ export function useSaveSystem() {
     }
   }, []);
 
-  const loadSavedGames = () => {
+  const loadSavedGames = async () => {
     setLoadingGames(true);
     try {
-      const raw = storageGet(STORAGE_KEY);
-      if (raw && raw.value) setSavedGames(JSON.parse(raw.value));
-      else setSavedGames([]);
-    } catch { setSavedGames([]); }
-    setLoadingGames(false);
+      const res = await fetch(`${API_BASE}/api/saves?clientKey=${clientKey.current}`);
+      if (!res.ok) throw new Error(await res.text());
+      setSavedGames(await res.json());
+    } catch (e) {
+      console.error("[loadSavedGames]", e);
+      setSavedGames([]);
+    } finally {
+      setLoadingGames(false);
+    }
   };
 
-  const loadGameData = (id) => {
+  const loadGameData = async (id) => {
     try {
-      const raw = storageGet(STORAGE_KEY);
-      if (!raw || !raw.value) return null;
-      const allSaves = JSON.parse(raw.value);
-      return allSaves.find(x => x.id === id) || null;
-    } catch { return null; }
+      const res = await fetch(`${API_BASE}/api/saves/${id}?clientKey=${clientKey.current}`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
   };
 
-  const deleteGame = (id) => {
+  const deleteGame = async (id) => {
     try {
-      const raw = storageGet(STORAGE_KEY);
-      let allSaves = [];
-      if (raw && raw.value) allSaves = JSON.parse(raw.value);
-      const updated = allSaves.filter(x => x.id !== id);
-      storageSet(STORAGE_KEY, JSON.stringify(updated));
-      setSavedGames(updated);
-    } catch (e) { console.error("Errore eliminazione:", e); }
+      await fetch(`${API_BASE}/api/saves/${id}?clientKey=${clientKey.current}`, {
+        method: "DELETE",
+      });
+      setSavedGames(prev => prev.filter(x => x.id !== id));
+    } catch (e) {
+      console.error("Errore eliminazione:", e);
+    }
   };
 
   return { savedGames, loadingGames, saveId, saveIdRef, updateSaveId, saveGame, loadSavedGames, loadGameData, deleteGame };

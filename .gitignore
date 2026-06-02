@@ -3,3 +3,4 @@ dist/
 mytemp/
 .DS_Store
 *.local
+.env
