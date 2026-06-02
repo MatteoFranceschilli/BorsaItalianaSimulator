@@ -137,10 +137,10 @@ export default function App() {
   priceHistoryForNPC.current = priceHistory;
   activeEventsForNPC.current = activeEvents;
 
-  // Tick NPC traders every simulation tick while market is open
+  // Tick NPC traders every simulation tick, passing elapsed sim-time for time-based decisions
   useEffect(() => {
     if (!running) return;
-    tickNPCs(pricesForNPC.current, priceHistoryForNPC.current, activeEventsForNPC.current);
+    tickNPCs(pricesForNPC.current, priceHistoryForNPC.current, activeEventsForNPC.current, speed, tRef.current);
   }, [tick]); // eslint-disable-line
 
   saveGameRef.current = () => {

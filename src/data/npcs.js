@@ -8,7 +8,7 @@ export const NPCS = [
     description: "Investe in buoni dividendi e non vende mai. La borsa è roba da attendere, non da inseguire.",
     startCash: 2000,
     archetype: "cassettista",
-    decisionProb: 0.006,
+    tradeIntervalHours: 336,   // ~1 trade ogni 2 settimane
   },
   {
     id: "ernesto",
@@ -18,7 +18,7 @@ export const NPCS = [
     description: "Ex bancario. Parcheggia il capitale in blue chip solide e aspetta. Il tempo è il suo alleato.",
     startCash: 3500,
     archetype: "cassettista",
-    decisionProb: 0.004,
+    tradeIntervalHours: 480,   // ~1 trade ogni 3 settimane
   },
   {
     id: "lucia",
@@ -28,7 +28,7 @@ export const NPCS = [
     description: "Compra azioni solide ogni mese come un orologio svizzero. Non apre quasi mai il portafoglio.",
     startCash: 1800,
     archetype: "cassettista",
-    decisionProb: 0.008,
+    tradeIntervalHours: 240,   // ~1 trade ogni 10 giorni
   },
 
   // ── MOMENTUM ─────────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ export const NPCS = [
     description: "Segue il momentum. Compra quel che sale, vende quel che scende.",
     startCash: 2000,
     archetype: "momentum",
-    decisionProb: 0.03,
+    tradeIntervalHours: 18,    // circa ogni 18 ore
   },
   {
     id: "daniele",
@@ -50,7 +50,7 @@ export const NPCS = [
     description: "Surfa i trend di breve periodo. Entra sul breakout, esce appena il momentum si piega.",
     startCash: 2500,
     archetype: "momentum",
-    decisionProb: 0.025,
+    tradeIntervalHours: 12,    // molto attivo, due volte al giorno
   },
   {
     id: "federica",
@@ -60,7 +60,7 @@ export const NPCS = [
     description: "Caccia i titoli in forte accelerazione. Alta rotazione, sempre sul lato giusto del mercato.",
     startCash: 1500,
     archetype: "momentum",
-    decisionProb: 0.035,
+    tradeIntervalHours: 24,    // una volta al giorno
   },
 
   // ── CONTRARIAN ───────────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ export const NPCS = [
     description: "Compra i ribassi, vende i rialzi. Scommette sulla mean-reversion.",
     startCash: 2000,
     archetype: "contrarian",
-    decisionProb: 0.02,
+    tradeIntervalHours: 36,    // ogni 1.5 giorni
   },
   {
     id: "matteo",
@@ -82,7 +82,7 @@ export const NPCS = [
     description: "Se tutti vendono, lui compra. Se tutti comprano, lui studia già l'uscita.",
     startCash: 2200,
     archetype: "contrarian",
-    decisionProb: 0.018,
+    tradeIntervalHours: 30,
   },
   {
     id: "cristina",
@@ -92,7 +92,7 @@ export const NPCS = [
     description: "Diffidente dei rialzi euforici. Preferisce raccogliere ciò che il panico del mercato butta via.",
     startCash: 3000,
     archetype: "contrarian",
-    decisionProb: 0.022,
+    tradeIntervalHours: 48,    // ogni 2 giorni
   },
 
   // ── PANIC ────────────────────────────────────────────────────────────────────
@@ -104,7 +104,7 @@ export const NPCS = [
     description: "Reagisce in modo esagerato alle notizie. Vende nel panico, compra per FOMO.",
     startCash: 2000,
     archetype: "panic",
-    decisionProb: 0.05,
+    tradeIntervalHours: 4,     // molto reattiva
   },
   {
     id: "fabio",
@@ -114,7 +114,7 @@ export const NPCS = [
     description: "Al minimo segno di crollo, liquida tutto. Si ricompra soltanto dopo che il titolo è già risalito.",
     startCash: 1500,
     archetype: "panic",
-    decisionProb: 0.045,
+    tradeIntervalHours: 6,
   },
   {
     id: "anna",
@@ -124,7 +124,7 @@ export const NPCS = [
     description: "La paura di perdere un'occasione la divora. Compra sempre tardi, vende sempre per paura.",
     startCash: 1800,
     archetype: "panic",
-    decisionProb: 0.055,
+    tradeIntervalHours: 3,     // la più reattiva di tutte
   },
 
   // ── QUANT ────────────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ export const NPCS = [
     description: "Approccio quantitativo puro. Media mobile, mean-reversion, zero emozioni.",
     startCash: 2000,
     archetype: "quant",
-    decisionProb: 0.08,
+    tradeIntervalHours: 5,
   },
   {
     id: "lorenzo",
@@ -146,7 +146,7 @@ export const NPCS = [
     description: "Puro statistico. Opera solo quando il prezzo diverge significativamente dalla media storica.",
     startCash: 4000,
     archetype: "quant",
-    decisionProb: 0.07,
+    tradeIntervalHours: 7,
   },
   {
     id: "silvia",
@@ -156,7 +156,7 @@ export const NPCS = [
     description: "Modelli sistematici e disciplina ferrea. Nessuna decisione discrezionale, solo segnali.",
     startCash: 2800,
     archetype: "quant",
-    decisionProb: 0.09,
+    tradeIntervalHours: 4,     // la più sistematica
   },
 
   // ── NOVICE ───────────────────────────────────────────────────────────────────
@@ -168,7 +168,7 @@ export const NPCS = [
     description: "Nuova al trading. Vende i vincitori troppo presto e tiene i perdenti troppo a lungo.",
     startCash: 2000,
     archetype: "novice",
-    decisionProb: 0.015,
+    tradeIntervalHours: 48,    // ogni 2 giorni
   },
   {
     id: "tommaso",
@@ -178,7 +178,7 @@ export const NPCS = [
     description: "Appassionato di finanza online. Segue consigli sui social e impara a caro prezzo.",
     startCash: 1200,
     archetype: "novice",
-    decisionProb: 0.02,
+    tradeIntervalHours: 36,    // controlla più spesso
   },
   {
     id: "martina",
@@ -188,7 +188,7 @@ export const NPCS = [
     description: "Studia economia. La teoria è solida, ma la pratica le gioca continuamente brutti scherzi.",
     startCash: 1000,
     archetype: "novice",
-    decisionProb: 0.012,
+    tradeIntervalHours: 72,    // ogni 3 giorni
   },
 
   // ── SPECULATOR ───────────────────────────────────────────────────────────────
@@ -200,7 +200,7 @@ export const NPCS = [
     description: "Alto rischio, alta ricompensa. Punta su titoli volatili e news di mercato.",
     startCash: 2000,
     archetype: "speculator",
-    decisionProb: 0.04,
+    tradeIntervalHours: 10,
   },
   {
     id: "giancarlo",
@@ -210,7 +210,7 @@ export const NPCS = [
     description: "Scommette sui titoli più volatili. Ride dei rischi quanto piange delle perdite.",
     startCash: 2500,
     archetype: "speculator",
-    decisionProb: 0.045,
+    tradeIntervalHours: 8,
   },
   {
     id: "paola",
@@ -220,7 +220,7 @@ export const NPCS = [
     description: "Concentra tutto su pochi titoli ad alto beta. Grandi rialzi o grandi crolli, niente di mezzo.",
     startCash: 1800,
     archetype: "speculator",
-    decisionProb: 0.035,
+    tradeIntervalHours: 14,
   },
 
   // ── DIVIDEND ─────────────────────────────────────────────────────────────────
@@ -232,7 +232,7 @@ export const NPCS = [
     description: "Cerca rendite passive. Accumula titoli ad alto dividendo e non vende quasi mai.",
     startCash: 2000,
     archetype: "dividend",
-    decisionProb: 0.004,
+    tradeIntervalHours: 360,   // ogni 15 giorni
   },
   {
     id: "sergio",
@@ -242,7 +242,7 @@ export const NPCS = [
     description: "Ex dirigente in pensione. Vive dei dividendi incassati, non tocca mai il capitale.",
     startCash: 5000,
     archetype: "dividend",
-    decisionProb: 0.005,
+    tradeIntervalHours: 480,   // ogni 20 giorni
   },
   {
     id: "carla",
@@ -252,7 +252,7 @@ export const NPCS = [
     description: "Reinveste ogni dividendo ricevuto. Il compounding è la sua religione e la sua pazienza.",
     startCash: 3000,
     archetype: "dividend",
-    decisionProb: 0.003,
+    tradeIntervalHours: 240,   // ogni 10 giorni
   },
 ];
 

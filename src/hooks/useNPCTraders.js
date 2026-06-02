@@ -9,54 +9,53 @@ function calcPortfolioValue(state, prices) {
   }, 0);
 }
 
-// Variable position sizing: confidence + random variance
-// Confident NPCs size up, shaken NPCs size down
+// Position sizing: confidence and random variance combine to scale quantity
 function getQty(total, baseRatio, price, confidence = 1.0) {
   const confScale = Math.max(0.5, Math.min(1.6, confidence));
-  const randomVariance = 0.75 + Math.random() * 0.5; // ±25%
+  const randomVariance = 0.75 + Math.random() * 0.5;
   return Math.floor((total * baseRatio * confScale * randomVariance) / price);
 }
 
-// How likely each archetype is to "change their mind" even when the signal is valid
+// Probability of ignoring a valid signal even after deciding (per-archetype hesitation)
 const HESITATION = {
-  cassettista: 0.22, // patient, but sometimes skips an opportunity
+  cassettista: 0.22,
   momentum:    0.10,
-  contrarian:  0.18, // sometimes too stubborn to act
-  panic:       0.03, // barely hesitates — acts on impulse
-  quant:       0.06, // systematic, rarely second-guesses
-  novice:      0.32, // overthinks everything
+  contrarian:  0.18,
+  panic:       0.03,
+  quant:       0.06,
+  novice:      0.32,
   speculator:  0.08,
-  dividend:    0.24, // deliberate accumulator, slow to act
+  dividend:    0.24,
 };
+
+// Confidence mean-reversion rate: ~50% back to 1.0 per sim-day
+// (1 sim-day = 86400 sim-seconds; rate = ln(2)/86400 ≈ 0.000008)
+const CONF_REVERT_RATE = 0.000008;
 
 function initStates() {
   return Object.fromEntries(
     NPCS.map(npc => [npc.id, {
       cash: npc.startCash,
       portfolio: {},
-      confidence: 1.0,   // 0.3–1.8: modifies trade frequency and position size
-      dormantTicks: 0,   // NPC pauses trading after a significant loss
+      confidence: 1.0,    // 0.3–1.8
+      dormantUntil: 0,    // sim-seconds: skip trading while simTotal < dormantUntil
     }])
   );
 }
 
 // ── Decision logic per archetype ──────────────────────────────────────────────
-// Each function receives state (with .confidence) and returns {action, instrId, qty} | null
-// Confidence affects: thresholds for entering/exiting, position size
 
 function decideCassettista(state, prices) {
   const pVal = calcPortfolioValue(state, prices);
   const total = state.cash + pVal;
   const conf = state.confidence;
 
-  // Only sell on severe loss; shaken cassettisti cut losses a touch earlier
   const lossThreshold = conf < 0.7 ? 0.78 : 0.75;
   for (const [id, pos] of Object.entries(state.portfolio)) {
     const cp = prices[id]?.current;
     if (cp && cp / pos.avgPrice < lossThreshold) return { action: "sell", instrId: id, qty: pos.qty };
   }
 
-  // Buy when sitting on excess cash; confident ones deploy sooner
   const cashThreshold = conf > 1.2 ? 0.30 : 0.40;
   if (state.cash > total * cashThreshold) {
     const picks = STOCKS
@@ -76,9 +75,8 @@ function decideCassettista(state, prices) {
 
 function decideMomentum(state, prices, priceHistory) {
   const conf = state.confidence;
-  // Confident trend followers give winners more room; shaken ones cut faster
-  const stopLoss  = conf > 1.2 ? -0.06 : -0.05;
-  const takeProfit = conf > 1.2 ? 0.22 : 0.18;
+  const stopLoss   = conf > 1.2 ? -0.06 : -0.05;
+  const takeProfit = conf > 1.2 ? 0.22  : 0.18;
 
   for (const [id, pos] of Object.entries(state.portfolio)) {
     const cp = prices[id]?.current;
@@ -94,10 +92,8 @@ function decideMomentum(state, prices, priceHistory) {
 
   const pVal = calcPortfolioValue(state, prices);
   const total = state.cash + pVal;
-  // Confident traders stay more invested; shaken ones keep a bigger cash buffer
   const minCash = conf > 1.3 ? 0.08 : 0.12;
   if (state.cash > total * minCash) {
-    // Confident traders chase even moderate moves; cautious ones wait for stronger signals
     const minPct = conf > 1.3 ? 1.5 : 2.0;
     const rising = STOCKS
       .filter(s => (prices[s.id]?.pctChange || 0) > minPct && !state.portfolio[s.id])
@@ -119,7 +115,6 @@ function decideContrarian(state, prices) {
   for (const [id, pos] of Object.entries(state.portfolio)) {
     const cp = prices[id]?.current;
     if (!cp) continue;
-    // Stubborn contrarians hold longer when confident; exit faster when shaken
     const riseToSell = conf > 1.2 ? 9 : 7;
     const gainToSell = conf < 0.7 ? 0.12 : 0.15;
     if ((prices[id]?.pctChange || 0) > riseToSell) return { action: "sell", instrId: id, qty: Math.ceil(pos.qty / 2) };
@@ -128,10 +123,8 @@ function decideContrarian(state, prices) {
 
   const pVal = calcPortfolioValue(state, prices);
   const total = state.cash + pVal;
-  // Shaken contrarians need a bigger cash cushion before going in
   const cashRequired = conf < 0.7 ? 0.35 : 0.25;
   if (state.cash > total * cashRequired) {
-    // More confident → buy on smaller dips; more cautious → wait for bigger drops
     const dipRequired = conf < 0.7 ? -6 : -4;
     const dipped = STOCKS
       .filter(s => (prices[s.id]?.pctChange || 0) < dipRequired && !state.portfolio[s.id])
@@ -153,7 +146,6 @@ function decidePanic(state, prices, activeEvents) {
   const total = state.cash + pVal;
   const conf = state.confidence;
 
-  // Shaken panic traders have a lower threshold for panic-selling on bad news
   const sentimentTrigger = conf < 0.7 ? -1.0 : -1.5;
   if (activeEvents.some(e => (e.sentimentEffect || 0) < sentimentTrigger)) {
     const ids = Object.keys(state.portfolio);
@@ -163,7 +155,6 @@ function decidePanic(state, prices, activeEvents) {
     }
   }
 
-  // Confident panic traders are even more susceptible to FOMO
   const fomoTrigger = conf > 1.2 ? 0.8 : 1.5;
   if (activeEvents.some(e => (e.sentimentEffect || 0) > fomoTrigger) && state.cash > total * 0.25) {
     const movers = STOCKS.filter(s => (prices[s.id]?.pctChange || 0) > 1.5 && !state.portfolio[s.id]);
@@ -177,13 +168,11 @@ function decidePanic(state, prices, activeEvents) {
     }
   }
 
-  // Sell individual positions on sharp drops; threshold tightens when already shaken
   const dropTrigger = conf < 0.6 ? -3.5 : -5;
   for (const [id, pos] of Object.entries(state.portfolio)) {
     if ((prices[id]?.pctChange || 0) < dropTrigger) return { action: "sell", instrId: id, qty: pos.qty };
   }
 
-  // Impulsive buy when sitting on too much cash
   const cashTrigger = conf > 1.2 ? 0.35 : 0.50;
   if (state.cash > total * cashTrigger && Math.random() < 0.2) {
     const s = STOCKS[Math.floor(Math.random() * STOCKS.length)];
@@ -198,7 +187,6 @@ function decidePanic(state, prices, activeEvents) {
 
 function decideQuant(state, prices, priceHistory) {
   const conf = state.confidence;
-  // Quant uses MA bands; confident ones sell a bit later, shaken ones earlier
   const sellBand = conf > 1.2 ? 1.06 : 1.04;
   for (const [id, pos] of Object.entries(state.portfolio)) {
     const hist = priceHistory[id] || [];
@@ -210,10 +198,8 @@ function decideQuant(state, prices, priceHistory) {
 
   const pVal = calcPortfolioValue(state, prices);
   const total = state.cash + pVal;
-  // Shaken quants keep a larger safety buffer
   const minCash = conf < 0.7 ? 0.15 : 0.10;
   if (state.cash > total * minCash) {
-    // Confident quants buy on smaller deviations from MA
     const buyBand = conf > 1.2 ? 0.98 : 0.97;
     const underMA = STOCKS
       .filter(s => {
@@ -238,13 +224,11 @@ function decideQuant(state, prices, priceHistory) {
 
 function decideNovice(state, prices) {
   const conf = state.confidence;
-  // Disposition effect: sells winners too early — threshold shrinks when scared
   const winThreshold = conf < 0.7 ? 0.05 : 0.08;
   for (const [id, pos] of Object.entries(state.portfolio)) {
     const cp = prices[id]?.current;
     if (!cp) continue;
     if (cp / pos.avgPrice - 1 > winThreshold) return { action: "sell", instrId: id, qty: pos.qty };
-    // Panics on sharp drops when already shaken (learns mistakes)
     if ((prices[id]?.pctChange || 0) < -6 && conf < 0.8) {
       return { action: "sell", instrId: id, qty: pos.qty };
     }
@@ -254,7 +238,6 @@ function decideNovice(state, prices) {
   const total = state.cash + pVal;
   const cashThreshold = conf > 1.2 ? 0.28 : 0.40;
   if (state.cash > total * cashThreshold && Math.random() < 0.4) {
-    // Overconfident novice chases things that already moved (FOMO)
     const candidates = conf > 1.2
       ? STOCKS.filter(s => (prices[s.id]?.pctChange || 0) > 1)
       : STOCKS;
@@ -272,9 +255,8 @@ function decideNovice(state, prices) {
 
 function decideSpeculator(state, prices, activeEvents) {
   const conf = state.confidence;
-  // Confident speculators hold through more pain; shaken ones cut quicker
-  const stopLoss  = conf < 0.7 ? -0.06 : -0.08;
-  const takeProfit = conf > 1.3 ? 0.30 : 0.25;
+  const stopLoss   = conf < 0.7 ? -0.06 : -0.08;
+  const takeProfit = conf > 1.3 ? 0.30  : 0.25;
   for (const [id, pos] of Object.entries(state.portfolio)) {
     const cp = prices[id]?.current;
     if (!cp) continue;
@@ -294,7 +276,6 @@ function decideSpeculator(state, prices, activeEvents) {
       const s = sectorStocks[Math.floor(Math.random() * sectorStocks.length)];
       const price = prices[s.id]?.current;
       if (price) {
-        // Confident speculators go bigger on event plays
         const ratio = conf > 1.3 ? 0.28 : 0.20;
         const qty = getQty(total, ratio, price, conf);
         if (qty > 0 && qty * price <= state.cash) return { action: "buy", instrId: s.id, qty };
@@ -320,10 +301,8 @@ function decideDividend(state, prices) {
   const pVal = calcPortfolioValue(state, prices);
   const total = state.cash + pVal;
   const conf = state.confidence;
-  // Confident dividend investors deploy more aggressively
   const minCash = conf > 1.2 ? 0.15 : 0.20;
   if (state.cash > total * minCash) {
-    // Confident ones reach for slightly lower-yielding stocks too
     const minDiv = conf > 1.2 ? 4 : 5;
     const divs = STOCKS
       .filter(s => (s.div || 0) >= minDiv)
@@ -348,34 +327,39 @@ export function useNPCTraders() {
   const [npcTrades, setNpcTrades] = useState([]);
   const npcPressureRef = useRef(0);
 
-  const tickNPCs = (prices, priceHistory, activeEvents) => {
+  // simSeconds: how many sim-seconds elapsed in this tick
+  // simTotal:   total sim-seconds elapsed since game start (tRef.current)
+  const tickNPCs = (prices, priceHistory, activeEvents, simSeconds, simTotal) => {
     if (!prices || Object.keys(prices).length === 0) return;
+    if (!simSeconds || simSeconds <= 0) return;
 
     const states = { ...statesRef.current };
     let netPressure = 0;
     const newTrades = [];
 
+    // Confidence reverts toward 1.0 proportionally to elapsed sim-time
+    const confRevert = CONF_REVERT_RATE * simSeconds;
+
     NPCS.forEach(npc => {
       const state = states[npc.id];
 
-      // 1. Confidence slowly reverts toward 1.0 every tick (humans recover)
-      const conf = state.confidence + (1.0 - state.confidence) * 0.004;
+      // 1. Always apply confidence mean-reversion (even if not trading)
+      const conf = Math.max(0.3, Math.min(1.8,
+        state.confidence + (1.0 - state.confidence) * confRevert
+      ));
+      states[npc.id] = { ...state, confidence: conf };
 
-      // 2. Dormancy countdown: NPC is licking wounds after a big loss
-      const newDormant = Math.max(0, state.dormantTicks - 1);
+      // 2. Skip if still in post-loss dormancy
+      if (simTotal < state.dormantUntil) return;
 
-      // Always persist the base confidence update (even without trading)
-      states[npc.id] = { ...state, confidence: conf, dormantTicks: newDormant };
-
-      // Skip trading while still in dormancy period
-      if (state.dormantTicks > 0) return;
-
-      // 3. Confidence modifies effective decision probability
-      //    High confidence → trades more; low confidence → trades less
-      const effectiveProb = npc.decisionProb * Math.max(0.3, conf);
+      // 3. Decision probability scaled to elapsed sim-time and confidence
+      //    tradeIntervalHours → probability per sim-second, then compounded for simSeconds
+      const probPerSimSec = 1 / (npc.tradeIntervalHours * 3600);
+      const confScale = Math.max(0.4, Math.min(1.5, conf));
+      const effectiveProb = 1 - Math.pow(1 - probPerSimSec * confScale, simSeconds);
       if (Math.random() > effectiveProb) return;
 
-      // 4. Decide
+      // 4. Run archetype decision
       const stateWithConf = { ...state, confidence: conf };
       let decision = null;
       switch (npc.archetype) {
@@ -391,7 +375,7 @@ export function useNPCTraders() {
 
       if (!decision) return;
 
-      // 5. Hesitation: even with a valid signal, humans sometimes second-guess
+      // 5. Hesitation: even with a signal, humans sometimes second-guess themselves
       if (Math.random() < (HESITATION[npc.archetype] || 0.1)) return;
 
       const { action, instrId, qty } = decision;
@@ -399,9 +383,9 @@ export function useNPCTraders() {
       if (!price || !qty || qty <= 0) return;
 
       // 6. Execute trade
-      const s = { ...state, portfolio: { ...state.portfolio }, confidence: conf, dormantTicks: 0 };
+      const s = { ...state, portfolio: { ...state.portfolio }, confidence: conf, dormantUntil: state.dormantUntil };
       let newConf = conf;
-      let dormantTicks = 0;
+      let dormantUntil = state.dormantUntil;
 
       if (action === "buy") {
         const commission = calcCommission(qty * price);
@@ -432,23 +416,22 @@ export function useNPCTraders() {
         }
         netPressure -= qty * price;
 
-        // 7. Update confidence based on trade outcome
+        // 7. Update confidence based on outcome; go dormant on significant losses
         if (gain > 0) {
-          // Win → more confident; big win → extra boost
           newConf = conf + 0.12 + (gain > qty * price * 0.08 ? 0.08 : 0);
         } else {
-          // Loss → less confident
           newConf = conf - 0.20;
-          // Significant loss → go dormant (step away from the market)
           const totalVal = s.cash + calcPortfolioValue(s, prices);
           if (Math.abs(gain) > totalVal * 0.04) {
-            dormantTicks = Math.floor(12 + Math.random() * 30);
+            // Dormancy = 1–3× the NPC's typical trade interval
+            const intervalSec = npc.tradeIntervalHours * 3600;
+            dormantUntil = simTotal + intervalSec * (1 + Math.random() * 2);
           }
         }
       }
 
       s.confidence = Math.max(0.3, Math.min(1.8, newConf));
-      s.dormantTicks = dormantTicks;
+      s.dormantUntil = dormantUntil;
       states[npc.id] = s;
       newTrades.push({
         npcId: npc.id, npcName: npc.name, npcAvatar: npc.avatar,
@@ -456,7 +439,6 @@ export function useNPCTraders() {
       });
     });
 
-    // Scale pressure for 24 NPCs
     npcPressureRef.current = Math.max(-1, Math.min(1, netPressure / 6000));
 
     statesRef.current = states;
